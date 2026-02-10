@@ -1,6 +1,9 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import { randomDefinition } from "./utils/random-definition.ts";
+import { FoodDef } from "./constants/food-def.ts";
+import { DinoDef } from "./constants/dino-def.ts";
 
 const app = express();
 const server = http.createServer(app);
@@ -16,12 +19,10 @@ const port = 3000;
 app.get("/", (req, res) => {
   res.send("Hello World!");
 
-  console.log("Random word:", randomWord(["apple", "banana", "cherry"]));
+  console.log("Random word:", randomDefinition(FoodDef));
 });
 
 io.on("connection", (socket) => {
-  console.log("user connected:", socket.id);
-
   socket.join("room1");
 
   socket.on("join", (pseudo) => {
@@ -33,8 +34,8 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("chat", (msg) => {
-    io.to("room1").emit("chat", msg);
+  socket.on("random-definition", () => {
+    io.to("room1").emit("definition", randomDefinition(DinoDef));
   });
 
   socket.on("leave", () => {

@@ -1,4 +1,4 @@
-import { Definition } from "../types/definitions";
+import type { Definition } from "../types/definitions.ts";
 
 export const SportDef: Definition[] = [
   {
