@@ -11,84 +11,158 @@ app.use("/api/items", gameRoutes);
 
 const io = new Server({
   cors: {
-    origin: "*",
+    origin: '*',
   },
 });
 
-const rooms = new Map();
-const users = new Map();
+type Room = { category: string; players: string[] };
+const rooms = new Map<string, Room>();
+const users = new Map<string, { pseudo: string; roomId: string }>();
 
-function clean(v) {
-  return String(v ?? "").trim();
-}
+const MAX_PLAYERS = 4;
 
 function makeRoomId() {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let roomId = "";
-  for (let i = 0; i < 6; i++) {
-    roomId += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return roomId;
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let id = '';
+  for (let i = 0; i < 6; i++)
+    id += chars[Math.floor(Math.random() * chars.length)];
+  return id;
 }
-
 function uniqueRoomId() {
   let id = makeRoomId();
   while (rooms.has(id)) id = makeRoomId();
   return id;
 }
-
-function isValidPseudo(pseudo) {
-  return typeof pseudo === "string" && pseudo.trim().length > 3;
+function clean(v: unknown) {
+  return String(v ?? '').trim();
 }
 
-function formalizePseudo(pseudo) {
+function isValidPseudo(pseudo: string) {
+  return pseudo.trim().length > 3;
+}
+
+function formalizePseudo(pseudo: string) {
   return pseudo.trim().toLowerCase();
 }
 
-// Create a snapshot of the current state
-function snapshot(roomId) {
+function pseudoTaken(room: Room, pseudo: string) {
+  const key = formalizePseudo(pseudo);
+  return room.players.some((p) => formalizePseudo(p) === key);
+}
+
+function roomUpdate(roomId: string) {
   const room = rooms.get(roomId);
-  if (!room) return null;
-
-  const players = [];
-  for (const [socketId, pseudo] of room.players.entries()) {
-    players.push({ pseudo });
-  }
-
-  return {
+  if (!room) return;
+  io.to(roomId).emit('room:update', {
     roomId,
     category: room.category,
-    players,
-  };
+    players: room.players,
+  });
 }
 
-function broadcastRoom(roomId) {
-  io.to(roomId).emit("room:update", snapshot(roomId));
+function removeUser(socketId: string) {
+  const u = users.get(socketId);
+  if (!u) return;
+  
+  const room = rooms.get(u.roomId);
+  if (room) {
+    room.players = room.players.filter((p) => p !== u.pseudo);
+    if (room.players.length === 0) {
+      rooms.delete(u.roomId);
+    } else {
+      roomUpdate(u.roomId);
+    }
+  }
 }
 
-io.on("connection", (socket) => {
-  socket.join("room2");
+io.on('connection', (socket) => {
+  console.log(`New connection: ${socket.id}`);
+  // Création: pseudo + room + category
+  socket.on(
+    'room:create',
+    async (pseudo: string, category: string, ack?: Function) => {
+      const p = clean(pseudo);
+      const c = clean(category);
 
-  socket.on("leave", () => {
-    socket.disconnect();
-    console.log("a user disconnected");
-  });
+      if (!isValidPseudo(p)) {
+        console.log(`Invalid pseudo attempt: "${pseudo}"`);
+        return ack?.({ ok: false, error: 'Invalid pseudo' });
+      }
+      if (!c) {
+        console.log(`Invalid category attempt`);
+        return ack?.({ ok: false, error: 'Invalid category' });
+      }
 
-  socket.on("chat", (msg) => {
-    console.log("message: " + msg);
-    io.emit("chat", msg);
-  });
+      removeUser(socket.id);
 
-  socket.on("join", (pseudo) => {
-    if (!pseudo) return;
+      const roomId = uniqueRoomId();
+      rooms.set(roomId, { category: c, players: [p] });
+      users.set(socket.id, { pseudo: p, roomId });
 
-    socket.join("room2");
+      await socket.join(roomId);
+      roomUpdate(roomId);
+      console.log(`Room created: ${roomId} by ${p} (${c})`);
+      ack?.({ ok: true, roomId });
+    },
+  );
 
-    io.to("room2").emit("join", {
-      pseudo,
-      room: "room2",
+  //Rejoindre : pseudo + room
+  socket.on('room:join', async (pseudo: string, roomId: string, ack?: Function) => {
+      const p = clean(pseudo);
+
+      if (!isValidPseudo(p)) {
+        console.log(`Invalid pseudo attempt: "${pseudo}"`);
+        return ack?.({ ok: false, error: 'Invalid pseudo' });
+      }
+
+      const room = rooms.get(roomId);
+      if (!room) {
+        console.log(`Room not found: ${roomId}`);
+        return ack?.({ ok: false, error: 'Room not found' });
+      }
+
+      if (room.players.length >= MAX_PLAYERS) {
+        console.log(`Room is full: ${roomId}`);
+        return ack?.({ ok: false, error: 'Room is full' });
+      }
+
+      if (pseudoTaken(room, p)) {
+        console.log(`Pseudo already taken: ${p}`);
+        return ack?.({ ok: false, error: 'Pseudo already taken' });
+      }
+
+      removeUser(socket.id);
+      users.set(socket.id, { pseudo: p, roomId });
+      room.players.push(p);
+
+      await socket.join(roomId);
+      roomUpdate(roomId);
+
+      console.log(`${p} joined room ${roomId} (${room.players.length}/${MAX_PLAYERS})`);
+      ack?.({ ok: true, roomId });
+    },
+  );
+
+  //Salle d'attente
+  socket.on('room:get', async (roomId: string, ack?: Function) => {
+    const id = clean(roomId);
+    const room = rooms.get(id);
+    if (!room) {
+      console.log(`Room get failed: ${id} not found`);
+      return ack?.({ ok: false, error: 'Room not found' });
+    }
+    console.log(`Room info requested: ${id}`);
+    ack?.({
+      ok: true,
+      room: { roomId: id, category: room.category, players: room.players },
     });
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`Disconnected: ${socket.id}`);
+    removeUser(socket.id);
   });
 });
 
 io.listen(8080);
+console.log('Server listening on port 8080');
