@@ -16,7 +16,7 @@ const App = () => {
     });
 
     socketRef.current.on("definition", (data) => {
-      console.log(data.definition);
+      console.log(data);
     });
 
     return () => {

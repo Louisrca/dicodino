@@ -35,7 +35,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("random-definition", () => {
-    io.to("room1").emit("definition", randomDefinition(DinoDef));
+    io.to("room1").emit("definition", randomDefinition(DinoDef).definition);
   });
 
   socket.on("leave", () => {
