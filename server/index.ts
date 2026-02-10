@@ -16,7 +16,7 @@ const io = new Server({
 });
 
 io.on("connection", (socket) => {
-  socket.join("room1");
+  socket.join("room2");
 
   socket.on("leave", () => {
     socket.disconnect();
@@ -31,11 +31,11 @@ io.on("connection", (socket) => {
   socket.on("join", (pseudo) => {
     if (!pseudo) return;
 
-    socket.join("room1");
+    socket.join("room2");
 
-    io.to("room1").emit("join", {
+    io.to("room2").emit("join", {
       pseudo,
-      room: "room1",
+      room: "room2",
     });
   });
 });
