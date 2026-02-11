@@ -143,7 +143,7 @@ io.on('connection', (socket) => {
         return ack?.({ ok: false, error: 'Already in a room' });
 
       await prisma.player.create({
-        data: { username: u, socketId: socket.id, roomId },
+        data: { username: formalizeUsername(u), socketId: socket.id, roomId },
       });
       await socket.join(roomId);
       await roomUpdate(roomId);
@@ -223,24 +223,48 @@ io.on('connection', (socket) => {
   );
 
   socket.on('disconnect', async () => {
-    const player = await prisma.player.findUnique({
-      where: { socketId: socket.id },
-    });
-    if (!player) return;
+    console.log('Disconnect:', socket.id);
+      const player = await prisma.player.findFirst({
+        where: { socketId: socket.id},
+      });
 
-    const r = player.roomId;
+      if (!player)
+        return;
 
-    await prisma.player.delete({ where: { id: player.id } });
+      const r = player.roomId;
 
-    const count = await prisma.player.count({ where: { roomId: r } });
+      const room = await prisma.room.findUnique({ where: { id: r } });
+      if (!room) {
+        await prisma.player.delete({ where: { id: player.id } }).catch(() => {});
+        return;
+      }
 
-    if (count === 0) {
-      await prisma.room.delete({ where: { id: r } });
-      console.log(`🧹 Room ${r} deleted`);
-    } else {
-      await roomUpdate(r);
-    }
-  });
+      const isHost = formalizeUsername(room.host) === player.username;
+
+      if (isHost) {
+        console.log(`Host disconnected → closing room ${r}`);
+
+        io.to(r).emit('room:closed', { message: 'Host disconnected, room closed' });
+        io.in(r).socketsLeave(r);
+
+        await prisma.player.deleteMany({ where: { roomId: r } });
+        await prisma.room.delete({ where: { id: r } });
+
+        return;
+      }
+
+      await prisma.player.delete({ where: { id: player.id } });
+
+      const count = await prisma.player.count({ where: { roomId: r } });
+
+      if (count === 0) {
+        console.log(`🧹 Room ${r} deleted (last player left)`);
+        await prisma.room.delete({ where: { id: r } });
+      } else {
+        await roomUpdate(r);
+      }
+    },
+  );
 });
 
 io.listen(8081);
