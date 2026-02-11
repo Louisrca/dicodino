@@ -1,0 +1,38 @@
+.chatRoomContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw;
+  max-height: 28rem;
+}
+
+.messagesContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  font-size: 13px;
+  overflow: auto;
+}
+
+.myMessage {
+  align-self: flex-end;
+  background-color: #8eff48;
+  color: #0e100f;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px;
+  max-width: 50%;
+}
+
+.otherMessage {
+  align-self: flex-start;
+  background-color: #fffce1;
+
+  color: rgb(0, 0, 0);
+  padding: 10px;
+  border-radius: 10px;
+  margin: 5px;
+  max-width: 50%;
+}

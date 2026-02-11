@@ -1,0 +1,13 @@
+.roomHeaderContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.roomHeaderContainer h2 {
+  font-size: 1.5rem;
+  color: #fffce1;
+  margin: 0;
+}
