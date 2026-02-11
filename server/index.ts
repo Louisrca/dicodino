@@ -16,6 +16,23 @@ const io = new Server({
 });
 
 const MAX_PLAYERS = 4;
+function normalizeWord(word: string) {
+  if (!word) return '';
+  
+  return word
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    // .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function wordsMatch(word1: string , word2: string) {
+  return normalizeWord(word1) === normalizeWord(word2);
+}
+
+// mot à deviner
+const currentWord = "chat";
 
 function clean(v: unknown) {
   return String(v ?? '').trim();
@@ -64,6 +81,46 @@ async function roomUpdate(roomId: string): Promise<void> {
 
 io.on('connection', (socket) => {
   console.log(`New connection: ${socket.id}`);
+
+    // gestion des propositions de mots
+  socket.on("chat", (msg) => {
+    console.log("message: " + msg);
+    
+    const isCorrect = wordsMatch(msg, currentWord);
+    
+    if (isCorrect) {
+      // bonne reponse
+      console.log("Quelqu'un a trouvé le mot !");
+      
+      io.to("room1").emit("chat", {
+        type: "system",
+        message: `Un joueur a trouvé le mot : "${currentWord}" !`
+      });
+      
+      io.to("room1").emit("word_found", {
+        word: currentWord
+      });
+      
+    } else {
+      // mauvaise reponse
+      io.to("room1").emit("chat", {
+        type: "player",
+        message: msg
+      });
+    }
+  });
+
+  //  mot suivant
+  socket.on("next_word", () => {
+    console.log("Passage au mot suivant");
+    io.to("room1").emit("new_word_ready");
+  });
+
+  // terminer la partie
+  socket.on("end_game", () => {
+    console.log("Fin de partie");
+    io.to("room1").emit("game_ended");
+  });
 
   // Création: pseudo + room + category
   socket.on(
