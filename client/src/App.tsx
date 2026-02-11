@@ -69,7 +69,7 @@ function App() {
   const leaveRoom = () => {
     if (!socketRef.current) return;
 
-    socketRef.current.emit('room:leave', pseudo, roomId, (response: { ok: boolean; roomId?: string; error?: string }) => {
+    socketRef.current.emit('room:leave', roomId, (response: { ok: boolean; roomId?: string; error?: string }) => {
       console.log('🚪 Réponse leave:', response);
       if (response.ok) {
         setMessage(`🚶 Tu as quitté la room: ${response.roomId}`);

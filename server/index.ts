@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import { gameRoutes } from './routes/gameRoutes.ts';
 import express from 'express';
-import {prisma} from './lib/prisma.ts';
+import { prisma } from './lib/prisma.ts';
 
 const app = express();
 
@@ -81,8 +81,14 @@ io.on('connection', (socket) => {
         return ack?.({ ok: false, error: 'Invalid category' });
       }
 
+      const existingPlayer = await prisma.player.findUnique({
+        where: { socketId: socket.id },
+      });
+      if (existingPlayer)
+        return ack?.({ ok: false, error: 'Already in a room' });
+
       const roomId = await uniqueRoomId();
-      await prisma.room.create({ data: { id: roomId, category: c, host: u} });
+      await prisma.room.create({ data: { id: roomId, category: c, host: u } });
       await prisma.player.create({
         data: { username: formalizeUsername(u), socketId: socket.id, roomId },
       });
@@ -130,6 +136,12 @@ io.on('connection', (socket) => {
         return ack?.({ ok: false, error: 'Username already taken' });
       }
 
+      const existingPlayer = await prisma.player.findUnique({
+        where: { socketId: socket.id },
+      });
+      if (existingPlayer)
+        return ack?.({ ok: false, error: 'Already in a room' });
+
       await prisma.player.create({
         data: { username: u, socketId: socket.id, roomId },
       });
@@ -163,46 +175,70 @@ io.on('connection', (socket) => {
     });
   });
 
-  socket.on('room:leave', async (username: string, roomId: string, ack?: Function) => {
-    const u = clean(username);
-    const r = clean(roomId);
+  function reply(ack: unknown, payload: any) {
+    if (typeof ack === 'function') (ack as (p: any) => void)(payload);
+  }
 
-    const player = await prisma.player.findFirst({
-      where: { username: u, roomId: r },
+  socket.on(
+    'room:leave',
+    async ( roomId: string, ack?: unknown) => {
+      const r = clean(roomId);
+
+      const player = await prisma.player.findFirst({
+        where: { socketId: socket.id, roomId: r },
+      });
+
+      if (!player)
+        return reply(ack, { ok: false, error: 'Player not found in room' });
+
+      const room = await prisma.room.findUnique({ where: { id: r } });
+      if (!room) return reply(ack, { ok: false, error: 'Room not found' });
+
+      const isHost = formalizeUsername(room.host) === player.username;
+
+      if (isHost) {
+        io.to(r).emit('room:closed', {
+          message: 'Host has left, room is closed',
+        });
+        io.in(r).socketsLeave(r);
+
+        await prisma.player.deleteMany({ where: { roomId: r } });
+        await prisma.room.delete({ where: { id: r } });
+
+        return reply(ack, { ok: true, roomId: r, close: true });
+      }
+
+      await prisma.player.delete({ where: { id: player.id } });
+      await socket.leave(r);
+
+      const playerCount = await prisma.player.count({ where: { roomId: r } });
+      if (playerCount === 0) {
+        await prisma.room.delete({ where: { id: r } });
+      } else {
+        await roomUpdate(r);
+      }
+
+      return reply(ack, { ok: true, roomId: r });
+    },
+  );
+
+  socket.on('disconnect', async () => {
+    const player = await prisma.player.findUnique({
+      where: { socketId: socket.id },
     });
+    if (!player) return;
 
-    if (!player) {
-      return ack?.({ ok: false, error: 'Player not found in room' });
-    }
+    const r = player.roomId;
 
     await prisma.player.delete({ where: { id: player.id } });
-    await socket.leave(r);
-    console.log(`👋 ${u} left room ${r}`);
 
-    const roomPlayers = await prisma.player.findMany({ where: { roomId: r } });
+    const count = await prisma.player.count({ where: { roomId: r } });
 
-    if (roomPlayers.length === 0) {
+    if (count === 0) {
       await prisma.room.delete({ where: { id: r } });
       console.log(`🧹 Room ${r} deleted`);
     } else {
       await roomUpdate(r);
-    }
-
-    ack?.({ ok: true, roomId: r });
-  });
-
-  socket.on('disconnect', async () => {
-    const player = await prisma.player.findFirst({ where: { socketId: socket.id } });
-    if (!player) return;
-
-    await prisma.player.delete({ where: { id: player.id } });
-
-    const roomPlayers = await prisma.player.findMany({ where: { roomId: player.roomId } });
-    if (roomPlayers.length === 0) {
-      await prisma.room.delete({ where: { id: player.roomId } });
-      console.log(`🧹 Room ${player.roomId} deleted`);
-    } else {
-      await roomUpdate(player.roomId);
     }
   });
 });
