@@ -84,14 +84,14 @@ io.on('connection', (socket) => {
       const roomId = await uniqueRoomId();
       await prisma.room.create({ data: { id: roomId, category: c, host: u} });
       await prisma.player.create({
-        data: { username: formalizeUsername(u), id: socket.id, roomId },
+        data: { username: formalizeUsername(u), socketId: socket.id, roomId },
       });
 
       await socket.join(roomId);
       await roomUpdate(roomId);
 
       console.log(`Room created: ${roomId} by ${u} (${c})`);
-      ack?.({ ok: true, socketId: socket.id, roomId });
+      ack?.({ ok: true, id: socket.id, roomId });
     },
   );
 
@@ -131,7 +131,7 @@ io.on('connection', (socket) => {
       }
 
       await prisma.player.create({
-        data: { username: u, id: socket.id, roomId },
+        data: { username: u, socketId: socket.id, roomId },
       });
       await socket.join(roomId);
       await roomUpdate(roomId);
@@ -192,7 +192,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', async () => {
-    const player = await prisma.player.findFirst({ where: { id: socket.id } });
+    const player = await prisma.player.findFirst({ where: { socketId: socket.id } });
     if (!player) return;
 
     await prisma.player.delete({ where: { id: player.id } });

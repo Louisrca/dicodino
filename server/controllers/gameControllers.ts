@@ -22,6 +22,7 @@ export const createRoom = async (
         players: {
           create: {
             id: uuidPlayer,
+            socketId: uuidPlayer,
             username: name,
             connected: true,
             score: 0,

@@ -25,6 +25,7 @@ model Room {
 
 model Player {
   id         String    @id @default(uuid())
+  socketId   String    @unique
   roomId     String
   username   String
   connected  Boolean   @default(true)
