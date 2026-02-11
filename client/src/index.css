@@ -8,3 +8,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+body {
+  background-color: #0e100f;
+  color: #fffce1;
+}

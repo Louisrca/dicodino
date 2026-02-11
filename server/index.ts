@@ -1,4 +1,13 @@
 import { Server } from "socket.io";
+import { gameRoutes } from "./routes/gameRoutes.ts";
+
+import express from "express";
+
+const app = express();
+
+app.use(express.json());
+
+app.use("/api/items", gameRoutes);
 
 const io = new Server({
   cors: {
