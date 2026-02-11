@@ -13,12 +13,16 @@ const SpinButton = ({
   variant,
   setIsAnimating,
   isAnimating,
+  disabled,
+  handleAction,
 }: {
   title?: string;
   href?: string;
   variant?: "primary" | "secondary" | "tertiary";
   setIsAnimating?: (isAnimating: boolean) => void;
   isAnimating?: boolean;
+  disabled?: boolean;
+  handleAction?: () => void;
 }) => {
   const container = useRef(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -44,6 +48,7 @@ const SpinButton = ({
     setIsAnimating?.(true);
 
     rotate();
+    handleAction?.();
     if (href) {
       setTimeout(() => {
         navigate(href);
@@ -56,7 +61,12 @@ const SpinButton = ({
       <button
         ref={buttonRef}
         onClick={handleClick}
-        className={clsx(style.button, variant && style[variant])}
+        className={clsx(
+          style.button,
+          variant && style[variant],
+          disabled && style.disabled,
+        )}
+        disabled={disabled}
       >
         {title || "Spin Me!"}
       </button>

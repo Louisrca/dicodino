@@ -23,3 +23,10 @@
   color: #fffce1;
   border: 1px solid #fffce1;
 }
+
+.button.disabled {
+  background-color: #555;
+  color: #aaa;
+  cursor: not-allowed;
+  outline: none;
+}

@@ -12,6 +12,10 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [socketId, setSocketId] = useState<string | undefined>(undefined);
   const [message, setMessage] = useState("");
 
+  const player = JSON.parse(
+    localStorage.getItem("player") || '{"username":"Anonyme"}',
+  );
+
   useEffect(() => {
     const newSocket = io("http://localhost:8081");
     setSocket(newSocket);
@@ -19,6 +23,14 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     newSocket.on("connect", () => {
       console.log("✅ Connecté au serveur");
       setSocketId(newSocket.id);
+      if (player?.username && player?.roomId) {
+        newSocket.emit(
+          "user:isConnected",
+          player.username,
+          player.roomId,
+          newSocket.id,
+        );
+      }
     });
 
     newSocket.on("disconnect", () => {

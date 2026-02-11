@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Comico";
-  src: url("./fonts/comico/Comico-Regular.otf") format("truetype");
+  src: url("/fonts/comico/Comico-Regular.otf") format("truetype");
 }
 
 .header {
@@ -14,4 +14,11 @@
   display: flex;
   flex-direction: row;
   cursor: pointer;
+}
+
+.connectionStatus {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 1rem;
 }

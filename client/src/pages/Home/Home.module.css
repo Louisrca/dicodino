@@ -5,6 +5,10 @@
   gap: 40px;
 }
 
+.dicodinoTitle {
+  font-family: "Comico";
+}
+
 .buttonsContainer {
   display: flex;
   gap: 20px;

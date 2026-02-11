@@ -1,94 +1,89 @@
+import cors from "cors";
 import express from "express";
+import http from "http";
 import { Server } from "socket.io";
 import { prisma } from "./lib/prisma.ts";
 import { gameRoutes } from "./routes/gameRoutes.ts";
 import {
   currentWord,
   formalizeUsername,
-  isValidCategory,
+  getOrCreatePlayer,
   isValidUsername,
   MAX_PLAYERS,
+  randomDefinition,
   reply,
   roomUpdate,
   trimString,
-  uniqueRoomId,
+  updatePlayer,
   wordsMatch,
 } from "./utils/utils.ts";
 
 const app = express();
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+  express.json(),
+);
 
-app.use(express.json());
-app.use("/api/items", gameRoutes);
+const server: http.Server = http.createServer(app);
 
-const io = new Server({
-  cors: {
-    origin: "*",
-  },
+export const io = new Server(server, {
+  cors: { origin: "*" },
 });
-
-// Helper: Trouver ou créer un player
-async function getOrCreatePlayer(username: string, socketId: string) {
-  const formalUsername = formalizeUsername(username);
-  
-  // D'abord chercher par socketId (reconnexion du même client)
-  let player = await prisma.player.findFirst({
-    where: { socketId },
-  });
-
-  // Si trouvé par socketId, on le met à jour avec le nouveau username
-  if (player) {
-    return await prisma.player.update({
-      where: { id: player.id },
-      data: { username: formalUsername },
-    });
-  }
-
-  // Sinon, chercher par username (player déconnecté qui revient)
-  player = await prisma.player.findFirst({
-    where: { 
-      username: formalUsername,
-      connected: false, // ← Important : seulement si déconnecté
-    },
-  });
-
-  // Si trouvé, on le réactive
-  if (player) {
-    return player;
-  }
-
-  // Sinon, créer un nouveau player
-  return await prisma.player.create({
-    data: { username: formalUsername, socketId, connected: true },
-  });
-}
-
-// Helper: Mettre à jour un player
-async function updatePlayer(playerId: string, data: any) {
-  return await prisma.player.update({
-    where: { id: playerId },
-    data,
-  });
-}
 
 io.on("connection", (socket) => {
   console.log(`New connection: ${socket.id}`);
 
-  socket.on("chat", (msg) => {
-    console.log("message: " + msg);
-
-    const isCorrect = wordsMatch(msg, currentWord);
-
-    if (isCorrect) {
-      console.log("Quelqu'un a trouvé le mot !");
-      io.to("room1").emit("chat", {
-        type: "system",
-        message: `Un joueur a trouvé le mot : "${currentWord}" !`,
+  // user:isConnected (reconnexion d'un client)
+  (socket.on(
+    "user:isConnected",
+    async (username: string, roomId: string, socketId: string) => {
+      const isRoomExist = await prisma.room.findUnique({
+        where: { id: roomId },
+        include: { players: { where: { connected: true } } },
       });
-      io.to("room1").emit("word_found", { word: currentWord });
-    } else {
-      io.to("room1").emit("chat", { type: "player", message: msg });
-    }
-  });
+      console.log(
+        `User isConnected - username: "${username}", roomId: "${roomId}", socketId: ${socketId}`,
+      );
+
+      if (!isRoomExist) {
+        console.log(`❌ Room not found: ${roomId}`);
+        return;
+      }
+
+      const player = await prisma.player.findFirst({
+        where: { username: formalizeUsername(username) },
+      });
+      if (!player) {
+        console.log(`❌ Player not found: ${username}`);
+        return;
+      }
+
+      await updatePlayer(player.id, { socketId, roomId, connected: true });
+      await socket.join(roomId);
+      await roomUpdate(roomId, io);
+
+      console.log(`✅ ${username} reconnected to room ${roomId}`);
+    },
+  ),
+    socket.on("chat", (msg) => {
+      console.log("message: " + msg);
+
+      const isCorrect = wordsMatch(msg, currentWord);
+
+      if (isCorrect) {
+        console.log("Quelqu'un a trouvé le mot !");
+        io.to("room1").emit("chat", {
+          type: "system",
+          message: `Un joueur a trouvé le mot : "${currentWord}" !`,
+        });
+        io.to("room1").emit("word_found", { word: currentWord });
+      } else {
+        io.to("room1").emit("chat", { type: "player", message: msg });
+      }
+    }));
 
   //  mot suivant
   socket.on("next_word", () => {
@@ -102,118 +97,107 @@ io.on("connection", (socket) => {
     io.to("room1").emit("game_ended");
   });
 
-  // Créer une room
-  socket.on("room:create", async (username: string, category: string, ack?: Function) => {
-    const u = trimString(username);
-    const c = trimString(category);
+  // room:join
+  socket.on(
+    "room:join",
+    async (username: string, roomId: string, ack?: Function) => {
+      const u = trimString(username);
+      const r = trimString(roomId);
 
-    if (!isValidUsername(u)) return ack?.({ ok: false, error: "Invalid username" });
-    if (!isValidCategory(c)) return ack?.({ ok: false, error: "Invalid category" });
-
-    try {
-      // Récupérer ou créer le player
-      const player = await getOrCreatePlayer(u, socket.id);
-
-      // Vérifier qu'il n'est pas déjà dans une room active
-      if (player.connected && player.roomId) {
-        return ack?.({ ok: false, error: "Already in a room. Leave first." });
+      if (!r) {
+        return ack?.({ ok: false, error: "Invalid room ID" });
       }
 
-      // Créer la room
-      const roomId = await uniqueRoomId();
-      await prisma.room.create({ 
-        data: { id: roomId, category: c, hostId: player.id } 
+      console.log(
+        `📥 room:join attempt - username: "${u}", roomId: "${r}", socketId: ${socket.id}`,
+      );
+
+      if (!isValidUsername(u)) {
+        return ack?.({ ok: false, error: "Invalid username" });
+      }
+
+      await prisma.player.updateMany({
+        where: { socketId: socket.id },
+        data: { socketId: null, connected: false },
       });
 
-      // Associer le player à la room
-      await updatePlayer(player.id, {
-        socketId: socket.id,
-        roomId,
-        connected: true,
-        score: 0,
-      });
+      try {
+        const room = await prisma.room.findUnique({
+          where: { id: r },
+          include: { players: { where: { connected: true } } },
+        });
 
-      await socket.join(roomId);
-      await roomUpdate(roomId, io);
+        if (!room) {
+          console.log(`❌ Room not found: ${r}`);
+          return ack?.({ ok: false, error: "Room not found" });
+        }
 
-      console.log(`Room ${roomId} created by ${u}`);
-      ack?.({ ok: true, roomId });
-    } catch (error) {
-      console.error("Error creating room:", error);
-      ack?.({ ok: false, error: "Server error" });
-    }
-  });
+        console.log(
+          `✅ Room found: ${r}, current players: ${room.players.length}/${MAX_PLAYERS}`,
+        );
 
-  // Rejoindre une room
-  socket.on("room:join", async (username: string, roomId: string, ack?: Function) => {
-    const u = trimString(username);
+        if (room.players.length >= MAX_PLAYERS) {
+          console.log(`❌ Room is full`);
+          return ack?.({ ok: false, error: "Room is full" });
+        }
+
+        // Vérifier que le username n'est pas déjà pris DANS CETTE ROOM
+        const usernameTaken = room.players.some(
+          (p) => formalizeUsername(p.username) === formalizeUsername(u),
+        );
+
+        if (usernameTaken) {
+          console.log(`❌ Username "${u}" already taken in room ${r}`);
+          return ack?.({ ok: false, error: "Username already taken" });
+        }
+
+        // Récupérer ou créer le player
+        const player = await getOrCreatePlayer(u);
+        console.log(
+          `Player found/created: ${player.id}, username: ${player.username}`,
+        );
+
+        // Vérifier qu'il n'est pas déjà connecté ailleurs
+        if (player.connected && player.roomId && player.roomId !== r) {
+          console.log(`❌ Player already in room ${player.roomId}`);
+          return ack?.({ ok: false, error: "Already in another room" });
+        }
+
+        // Associer le player à la room
+        await updatePlayer(player.id, {
+          socketId: socket.id,
+          roomId: r,
+          connected: true,
+          score: 0,
+        });
+
+        await socket.join(r);
+        await roomUpdate(r, io);
+
+        console.log(`✅ ${u} joined room ${r}`);
+        ack?.({
+          ok: true,
+          roomId: r,
+          player: {
+            username: player.username,
+            id: player.id,
+          },
+        });
+      } catch (error) {
+        console.error("❌ Error joining room:", error);
+        ack?.({ ok: false, error: "Server error" });
+      }
+    },
+  );
+
+  // room:gameStart
+  socket.on("room:gameStart", async (roomId: string, ack?: Function) => {
     const r = trimString(roomId);
 
-    if (!r) {
-      return ack?.({ ok: false, error: "Invalid room ID" });
-    }
-
-    console.log(`📥 room:join attempt - username: "${u}", roomId: "${r}", socketId: ${socket.id}`);
-
-    if (!isValidUsername(u)) {
-      return ack?.({ ok: false, error: "Invalid username" });
-    }
-
-    try {
-      const room = await prisma.room.findUnique({
-        where: { id: r },
-        include: { players: { where: { connected: true } } },
-      });
-
-      if (!room) {
-        console.log(`❌ Room not found: ${r}`);
-        return ack?.({ ok: false, error: "Room not found" });
-      }
-
-      console.log(`✅ Room found: ${r}, current players: ${room.players.length}/${MAX_PLAYERS}`);
-
-      if (room.players.length >= MAX_PLAYERS) {
-        console.log(`❌ Room is full`);
-        return ack?.({ ok: false, error: "Room is full" });
-      }
-
-      // Vérifier que le username n'est pas déjà pris DANS CETTE ROOM
-      const usernameTaken = room.players.some(
-        p => formalizeUsername(p.username) === formalizeUsername(u)
-      );
-      
-      if (usernameTaken) {
-        console.log(`❌ Username "${u}" already taken in room ${r}`);
-        return ack?.({ ok: false, error: "Username already taken" });
-      }
-
-      // Récupérer ou créer le player
-      const player = await getOrCreatePlayer(u, socket.id);
-      console.log(`Player found/created: ${player.id}, username: ${player.username}`);
-
-      // Vérifier qu'il n'est pas déjà connecté ailleurs
-      if (player.connected && player.roomId && player.roomId !== r) {
-        console.log(`❌ Player already in room ${player.roomId}`);
-        return ack?.({ ok: false, error: "Already in another room" });
-      }
-
-      // Associer le player à la room
-      await updatePlayer(player.id, {
-        socketId: socket.id,
-        roomId: r,
-        connected: true,
-        score: 0,
-      });
-
-      await socket.join(r);
-      await roomUpdate(r, io);
-
-      console.log(`✅ ${u} joined room ${r}`);
-      ack?.({ ok: true, roomId: r });
-    } catch (error) {
-      console.error("❌ Error joining room:", error);
-      ack?.({ ok: false, error: "Server error" });
-    }
+    io.to(r).emit("room:gameStarted", { message: "The game has started!" });
+    io.to(r).emit("room:newWordReady", {
+      definition: randomDefinition("dino").definition,
+    });
   });
 
   // Infos room
@@ -235,10 +219,10 @@ io.on("connection", (socket) => {
 
       ack?.({
         ok: true,
-        room: { 
-          roomId: id, 
-          category: room.category, 
-          players: room.players.map(p => ({ username: p.username })) 
+        room: {
+          roomId: id,
+          category: room.category,
+          players: room.players.map((p) => ({ username: p.username })),
         },
       });
     } catch (error) {
@@ -294,28 +278,41 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on(
+    "random-definition",
+    ({ roomId, category }: { roomId: string; category: string }) => {
+      io.to(roomId).emit("definition", randomDefinition(category).definition);
+    },
+  );
+
+  socket.on("disconnect", () => {
+    console.log("user disconnected:", socket.id);
+  });
+
   // Déconnexion
   socket.on("disconnect", async () => {
     const player = await prisma.player.findFirst({
       where: { socketId: socket.id, connected: true },
     });
-  
+
     if (!player) return;
-  
+
     const r = player.roomId;
     const room = r ? await prisma.room.findUnique({ where: { id: r } }) : null;
-  
+
     await updatePlayer(player.id, {
       connected: false,
       roomId: null,
       socketId: null,
     });
-  
     if (room) {
       await roomUpdate(r!, io);
     }
   });
 });
 
-io.listen(8081);
-console.log("Server listening on port 8081");
+app.use("/api/dicodino", gameRoutes);
+
+server.listen(8081, () => {
+  console.log("API listening on port 8081");
+});

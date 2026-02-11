@@ -12,13 +12,15 @@ function App() {
     <div className="App">
       <SocketProvider>
         <Header />
-        <Routes>
-          <Route path="/room" element={<ChatRoom />} />
-          <Route path="/createRoom" element={<CreateRoom />} />
-          <Route path="/joinRoom" element={<JoinRoom />} />
-          <Route path="/lobby/:id" element={<Lobby />} />
-          <Route path="/" element={<Home />} />
-        </Routes>
+        <div className="pageWrapper">
+          <Routes>
+            <Route path="/room/:roomId" element={<ChatRoom />} />
+            <Route path="/createRoom" element={<CreateRoom />} />
+            <Route path="/joinRoom" element={<JoinRoom />} />
+            <Route path="/lobby/:lobbyId" element={<Lobby />} />
+            <Route path="/" element={<Home />} />
+          </Routes>
+        </div>
       </SocketProvider>
     </div>
   );
