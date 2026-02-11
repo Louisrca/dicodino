@@ -5,18 +5,17 @@ function App() {
   const socketRef = useRef<Socket | null>(null);
   const [status, setStatus] = useState('Déconnecté');
   const [category, setCategory] = useState('');
-  const [roomId, setRoomId] = useState(() => localStorage.getItem('roomId') || '');
-  const [pseudo, setPseudo] = useState(() => localStorage.getItem('pseudo') || '');
+  const [roomId, setRoomId] = useState('');
+  const [pseudo, setPseudo] = useState('');
   const [players, setPlayers] = useState<string[]>([]);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    
-    socketRef.current = io('http://localhost:8080');
+    socketRef.current = io('http://localhost:8081');
 
     socketRef.current.on('connect', () => {
       setStatus('Connecté');
-      console.log('Connecté au serveur');
+      console.log('✅ Connecté au serveur');
     });
 
     socketRef.current.on('disconnect', () => {
@@ -24,7 +23,7 @@ function App() {
     });
 
     socketRef.current.on('room:update', (data: { roomId: string; players: string[], category: string }) => {
-      console.log('Room update:', data);
+      console.log('📡 Room update:', data);
       setPlayers(data.players);
       setMessage(`Room ${data.roomId}: ${data.players.join(', ')}`);
       setCategory(data.category);
@@ -40,14 +39,14 @@ function App() {
     if (!socketRef.current) return;
 
     socketRef.current.emit('room:create', pseudo, category, (response: { ok: boolean; roomId?: string; error?: string }) => {
-      console.log('Réponse create:', response);
+      console.log('🛠️ Réponse create:', response);
       if (response.ok && response.roomId) {
-        setRoomId(response.roomId || '');
-        setMessage(`Room créée: ${response.roomId}`);
+        setRoomId(response.roomId);
+        setMessage(`✅ Room créée: ${response.roomId}`);
         localStorage.setItem('roomId', response.roomId);
-    localStorage.setItem('pseudo', pseudo);
+        localStorage.setItem('pseudo', pseudo);
       } else {
-        setMessage(`Erreur: ${response.error}`);
+        setMessage(`❌ Erreur: ${response.error}`);
       }
     });
   };
@@ -56,13 +55,13 @@ function App() {
     if (!socketRef.current) return;
 
     socketRef.current.emit('room:join', pseudo, roomId, (response: { ok: boolean; roomId?: string; error?: string }) => {
-      console.log('Réponse join:', response);
-      if (response.ok) {
-        setMessage(`Rejoint la room: ${response.roomId}`);
-        localStorage.setItem('roomId', roomId);
+      console.log('🔁 Réponse join:', response);
+      if (response.ok && response.roomId) {
+        setMessage(`✅ Rejoint la room: ${response.roomId}`);
+        localStorage.setItem('roomId', response.roomId);
         localStorage.setItem('pseudo', pseudo);
       } else {
-        setMessage(`Erreur: ${response.error}`);
+        setMessage(`❌ Erreur: ${response.error}`);
       }
     });
   };
@@ -71,16 +70,19 @@ function App() {
     if (!socketRef.current) return;
 
     socketRef.current.emit('room:leave', pseudo, roomId, (response: { ok: boolean; roomId?: string; error?: string }) => {
-      console.log('Réponse leave:', response);
+      console.log('🚪 Réponse leave:', response);
       if (response.ok) {
-        setMessage(`A quitté la room: ${response.roomId}`);
+        setMessage(`🚶 Tu as quitté la room: ${response.roomId}`);
+        setRoomId('');
+        setCategory('');
+        setPlayers([]);
         localStorage.removeItem('roomId');
         localStorage.removeItem('pseudo');
       } else {
-        setMessage(`Erreur: ${response.error}`);
+        setMessage(`❌ Erreur: ${response.error}`);
       }
     });
-  }
+  };
 
   return (
     <div style={{ padding: '20px', fontFamily: 'Arial' }}>
@@ -117,6 +119,8 @@ function App() {
       />
       <button onClick={joinRoom}>Rejoindre</button>
 
+      <hr />
+
       <h2>Lobby</h2>
       <p style={{ fontSize: '12px', color: '#888' }}>
         Room ID: {roomId}
@@ -129,7 +133,7 @@ function App() {
       </p>
       <ul>
         {players.map((playerPseudo, index) => (
-          <li key={index} style={{ fontSize: '12px', color: playerPseudo === pseudo ? '#0f0' : '#fff' }}>
+          <li key={index} style={{ fontSize: '12px', color: playerPseudo === pseudo ? '#0f0' : '#000' }}>
             {playerPseudo} {playerPseudo === pseudo && '(vous)'}
           </li>
         ))}
