@@ -14,30 +14,48 @@ datasource db {
 }
 
 model Room {
-  id        String   @id @default(uuid())
-  host      String
-  players   Players[]
-  rounds    Round[]
-  category  String
-  createdAt DateTime @default(now())
+  id         String    @id @default(uuid())
+  host       String
+  category   String
+  createdAt  DateTime  @default(now())
+  
+  players    Player[]
+  rounds     Round[]
+  messages   Message[]
+}
+
+model Player {
+  id         String    @id @default(uuid())
+  socketId   String    @unique
+  roomId     String
+  username   String
+  connected  Boolean   @default(true)
+  score      Int       @default(0)
+
+  room       Room      @relation(fields: [roomId], references: [id])
+  messages   Message[]
 }
 
 model Round {
-  id        String   @id @default(uuid())
-  roomId    String
-  roundNumber Int
+  id                String   @id @default(uuid())
+  roomId            String
+  roundNumber       Int
   currentDefinition String
-  currentAnswer String
-  winner    String
-  room      Room     @relation(fields: [roomId], references: [id])
+  currentAnswer     String
+  winnerId          String?
+
+  room              Room     @relation(fields: [roomId], references: [id])
 }
 
-model Players {
+model Message {
   id        String   @id @default(uuid())
   roomId    String
-  username  String
-  connected Boolean
-  score     Int
-  room      Room     @relation(fields: [roomId], references: [id])
+  senderId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  room     Room     @relation(fields: [roomId], references: [id])
+  sender   Player   @relation(fields: [senderId], references: [id])
 }
+
 
