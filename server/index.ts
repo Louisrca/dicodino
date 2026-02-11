@@ -15,11 +15,19 @@ const io = new Server({
   },
 });
 
-type Room = { category: string; players: string[] };
-const rooms = new Map<string, Room>();
-const users = new Map<string, { pseudo: string; roomId: string }>();
-
 const MAX_PLAYERS = 4;
+
+function clean(v: unknown) {
+  return String(v ?? '').trim();
+}
+
+function isValidPseudo(pseudo: string) {
+  return pseudo.trim().length > 1;
+}
+
+function formalizePseudo(pseudo: string) {
+  return pseudo.trim().toLowerCase();
+}
 
 function makeRoomId() {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -28,26 +36,9 @@ function makeRoomId() {
     id += chars[Math.floor(Math.random() * chars.length)];
   return id;
 }
+
 function uniqueRoomId() {
-  let id = makeRoomId();
-  while (rooms.has(id)) id = makeRoomId();
-  return id;
-}
-function clean(v: unknown) {
-  return String(v ?? '').trim();
-}
-
-function isValidPseudo(pseudo: string) {
-  return pseudo.trim().length > 3;
-}
-
-function formalizePseudo(pseudo: string) {
-  return pseudo.trim().toLowerCase();
-}
-
-function pseudoTaken(room: Room, pseudo: string) {
-  const key = formalizePseudo(pseudo);
-  return room.players.some((p) => formalizePseudo(p) === key);
+  
 }
 
 function roomUpdate(roomId: string) {
@@ -60,27 +51,10 @@ function roomUpdate(roomId: string) {
   });
 }
 
-function removeUser(socketId: string) {
-  const u = users.get(socketId);
-  if (!u) return;
-  
-  const room = rooms.get(u.roomId);
-  if (room) {
-    room.players = room.players.filter((p) => p !== u.pseudo);
-    if (room.players.length === 0) {
-      rooms.delete(u.roomId);
-    } else {
-      roomUpdate(u.roomId);
-    }
-  }
-}
-
 io.on('connection', (socket) => {
   console.log(`New connection: ${socket.id}`);
   // Création: pseudo + room + category
-  socket.on(
-    'room:create',
-    async (pseudo: string, category: string, ack?: Function) => {
+  socket.on('room:create', async (pseudo: string, category: string, ack?: Function) => {
       const p = clean(pseudo);
       const c = clean(category);
 
