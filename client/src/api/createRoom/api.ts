@@ -13,7 +13,7 @@ export const useCreateRoom = () => {
     category: string;
   }) => {
     try {
-      const res = await fetch(`${API_BASE_URL}/room`, {
+      const res = await fetch(`${API_BASE_URL}/room/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, category }),
