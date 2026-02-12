@@ -1,51 +1,43 @@
-import { useContext, useEffect, useState } from "react";
-import { SocketContext } from "../../context/socketProvider";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { SocketContext } from "../../context/socketProvider";
+import type { Player } from "../../types/players";
 
 const JoinRoom = () => {
-  const [status, setStatus] = useState("Déconnecté");
-  const [pseudo, setPseudo] = useState("");
+  const [username, setUsername] = useState("");
   const [error, setError] = useState("");
   const [roomId, setRoomId] = useState("");
 
   const navigate = useNavigate();
 
   const { socket } = useContext(SocketContext);
-  useEffect(() => {
-    socket?.on("connect", () => {
-      setStatus("Connecté");
-      console.log("✅ Connecté au serveur");
-    });
-
-    socket?.on("disconnect", () => {
-      setStatus("Déconnecté");
-    });
-
-    socket?.on(
-      "room:update",
-      (data: { roomId: string; players: string[]; category: string }) => {
-        console.log("📡 Room update:", data);
-      },
-    );
-
-    return () => {
-      socket?.off("room:update");
-    };
-  }, [socket]);
 
   const joinRoom = () => {
     if (!socket) return;
 
     socket.emit(
       "room:join",
-      pseudo,
+      username,
       roomId,
-      (response: { ok: boolean; roomId?: string; error?: string }) => {
-        console.log("🔁 Réponse join:", response);
+      (response: {
+        ok: boolean;
+        roomId?: string;
+        error?: string;
+        player: Player;
+      }) => {
         if (response.ok && response.roomId) {
-          localStorage.setItem("roomId", response.roomId);
-          localStorage.setItem("pseudo", pseudo);
-          navigate(`/room/${response.roomId}`);
+          const existingPlayer = JSON.parse(localStorage.getItem("player")!);
+
+          if (existingPlayer) {
+            localStorage.removeItem("player");
+          }
+
+          localStorage.setItem(
+            "player",
+            JSON.stringify({ ...response.player, roomId: response.roomId }),
+          );
+
+          navigate(`/lobby/${response.roomId}`);
         } else {
           setError(`❌ Erreur: ${response.error}`);
         }
@@ -55,13 +47,12 @@ const JoinRoom = () => {
   return (
     <div style={{ padding: "20px", fontFamily: "Arial" }}>
       <h1>Test Socket.IO</h1>
-      <p>Status: {status}</p>
 
       <h2>Rejoindre une room</h2>
       <input
         placeholder="Pseudo"
-        value={pseudo}
-        onChange={(e) => setPseudo(e.target.value)}
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
       />
       <input
         placeholder="Room ID"

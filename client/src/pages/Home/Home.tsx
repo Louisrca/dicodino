@@ -1,13 +1,41 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SpinButton from "../../components/SpinButton/SpinButton";
 import style from "./Home.module.css";
+import gsap from "gsap";
 
 const Home = () => {
   const [isAnimating, setIsAnimating] = useState(false);
+  const spanRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (!spanRef.current) return;
+
+    const letters = spanRef.current.querySelectorAll("span");
+
+    gsap.to(letters, {
+      y: -10,
+      duration: 0.3,
+      ease: "power1.inOut",
+      repeat: -5,
+      yoyo: true,
+      stagger: 0.1,
+      repeatDelay: 1,
+    });
+  }, []);
+
+  const word = "DICODINO".split("").map((letter, i) => (
+    <span key={i} style={{ display: "inline-block" }}>
+      {letter}
+    </span>
+  ));
+
   return (
     <div className={style.home}>
       <h1>
-        Welcome to <span className="dicodino-title">DICODINO</span>
+        Welcome to{" "}
+        <span ref={spanRef} className={style.dicodinoTitle}>
+          {word}
+        </span>
       </h1>
       <div className={style.buttonsContainer}>
         <SpinButton
