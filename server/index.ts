@@ -5,17 +5,12 @@ import { Server } from "socket.io";
 import { prisma } from "./lib/prisma.ts";
 import { gameRoutes } from "./routes/gameRoutes.ts";
 import {
-  currentWord,
   formalizeUsername,
-  getOrCreatePlayer,
-  isValidUsername,
-  MAX_PLAYERS,
   randomDefinition,
   reply,
   roomUpdate,
   trimString,
   updatePlayer,
-  wordsMatch,
 } from "./utils/utils.ts";
 
 const app = express();
@@ -68,28 +63,11 @@ io.on("connection", (socket) => {
       console.log(`✅ ${username} reconnected to room ${roomId}`);
     },
   ),
-    socket.on("chat", (msg) => {
-      console.log("message: " + msg);
-
-      const isCorrect = wordsMatch(msg, currentWord);
-
-      if (isCorrect) {
-        console.log("Quelqu'un a trouvé le mot !");
-        io.to("room1").emit("chat", {
-          type: "system",
-          message: `Un joueur a trouvé le mot : "${currentWord}" !`,
-        });
-        io.to("room1").emit("word_found", { word: currentWord });
-      } else {
-        io.to("room1").emit("chat", { type: "player", message: msg });
-      }
+    //  mot suivant
+    socket.on("next_word", () => {
+      console.log("Passage au mot suivant");
+      io.to("room1").emit("new_word_ready");
     }));
-
-  //  mot suivant
-  socket.on("next_word", () => {
-    console.log("Passage au mot suivant");
-    io.to("room1").emit("new_word_ready");
-  });
 
   // terminer la partie
   socket.on("end_game", () => {
@@ -105,37 +83,6 @@ io.on("connection", (socket) => {
     io.to(r).emit("room:newWordReady", {
       definition: randomDefinition("dino").definition,
     });
-  });
-
-  // Infos room
-  socket.on("room:get", async (roomId: string, ack?: Function) => {
-    const id = trimString(roomId);
-
-    // Validation du roomId
-    if (!id || id.length === 0) {
-      return ack?.({ ok: false, error: "Invalid room ID" });
-    }
-
-    try {
-      const room = await prisma.room.findUnique({
-        where: { id },
-        include: { players: { where: { connected: true } } },
-      });
-
-      if (!room) return ack?.({ ok: false, error: "Room not found" });
-
-      ack?.({
-        ok: true,
-        room: {
-          roomId: id,
-          category: room.category,
-          players: room.players.map((p) => ({ username: p.username })),
-        },
-      });
-    } catch (error) {
-      console.error("Error getting room:", error);
-      ack?.({ ok: false, error: "Server error" });
-    }
   });
 
   // Quitter une room
@@ -191,10 +138,6 @@ io.on("connection", (socket) => {
       io.to(roomId).emit("definition", randomDefinition(category).definition);
     },
   );
-
-  socket.on("disconnect", () => {
-    console.log("user disconnected:", socket.id);
-  });
 
   // Déconnexion
   socket.on("disconnect", async () => {

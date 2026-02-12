@@ -115,12 +115,9 @@ export function normalizeWord(word: string) {
   );
 }
 
-export function wordsMatch(word1: string, word2: string) {
-  return normalizeWord(word1) === normalizeWord(word2);
+export function wordsMatch(wordToGuess: string, userAnswer: string) {
+  return normalizeWord(wordToGuess) === normalizeWord(userAnswer);
 }
-
-// mot à deviner
-export const currentWord = "chat";
 
 // Helper: Trouver ou créer un player
 export async function getOrCreatePlayer(username: string) {

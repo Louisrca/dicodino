@@ -2,10 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import SpinButton from "../../components/SpinButton/SpinButton";
 import style from "./Home.module.css";
 import gsap from "gsap";
+import { useUserInformation } from "../../api/user/useUserInformation";
 
 const Home = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const spanRef = useRef<HTMLSpanElement>(null);
+
+  const { getUserInformation } = useUserInformation();
 
   useEffect(() => {
     if (!spanRef.current) return;
@@ -22,6 +25,25 @@ const Home = () => {
       repeatDelay: 1,
     });
   }, []);
+
+  useEffect(() => {
+    const storedPlayer = localStorage.getItem("player");
+    if (storedPlayer) {
+      const player = JSON.parse(storedPlayer);
+      getUserInformation(player.id)
+        .then((data) => {
+          if (data) {
+            localStorage.setItem("player", JSON.stringify(data));
+          } else {
+            localStorage.removeItem("player");
+          }
+        })
+        .catch((err: Error) => {
+          console.error("Error fetching user information:", err);
+          localStorage.removeItem("player");
+        });
+    }
+  }, [getUserInformation]);
 
   const word = "DICODINO".split("").map((letter, i) => (
     <span key={i} style={{ display: "inline-block" }}>

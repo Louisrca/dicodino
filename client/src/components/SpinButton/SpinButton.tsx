@@ -47,7 +47,6 @@ const SpinButton = ({
 
     setIsAnimating?.(true);
 
-    rotate();
     handleAction?.();
     if (href) {
       setTimeout(() => {
