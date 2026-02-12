@@ -24,6 +24,7 @@ const Lobby = () => {
   useEffect(() => {
     if (!roomId) return;
 
+    //créer un hook pour fetch lobby info (players, category) et l'appeler ici
     void (async () => {
       setIsLoading(true);
       try {
@@ -78,6 +79,7 @@ const Lobby = () => {
     };
   }, [socket, roomId, roomIdState]);
 
+  // créer un hook pour leave room
   const handleLeave = () => {
     socket?.emit(
       "room:leave",
@@ -94,6 +96,7 @@ const Lobby = () => {
     );
   };
 
+  // créer un hook pour start game
   const handleStartGame = () => {
     socket?.emit(
       "room:gameStart",
