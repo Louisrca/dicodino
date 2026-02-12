@@ -1,49 +1,31 @@
-import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
 import { SocketContext } from "../../context/socketProvider";
-import type { Player } from "../../types/players";
+import { useJoinRoom } from "../../api/joinRoom/useJoinRoom";
 
 const JoinRoom = () => {
   const [username, setUsername] = useState("");
-  const [error, setError] = useState("");
   const [roomId, setRoomId] = useState("");
 
-  const navigate = useNavigate();
+  const { joinRoom } = useJoinRoom();
 
   const { socket } = useContext(SocketContext);
-
-  const joinRoom = () => {
-    if (!socket) return;
-
-    socket.emit(
-      "room:join",
-      username,
-      roomId,
-      (response: {
-        ok: boolean;
-        roomId?: string;
-        error?: string;
-        player: Player;
-      }) => {
-        if (response.ok && response.roomId) {
-          const existingPlayer = JSON.parse(localStorage.getItem("player")!);
-
-          if (existingPlayer) {
-            localStorage.removeItem("player");
-          }
-
-          localStorage.setItem(
-            "player",
-            JSON.stringify({ ...response.player, roomId: response.roomId }),
-          );
-
-          navigate(`/lobby/${response.roomId}`);
-        } else {
-          setError(`❌ Erreur: ${response.error}`);
-        }
+  useEffect(() => {
+    socket?.on(
+      "room:update",
+      (data: { roomId: string; players: string[] }) => {
+        setRoomId(data.roomId);
       },
     );
+
+    return () => {
+      socket?.off("room:update");
+    };
+  }, [socket]);
+
+  const handleJoinRoom = () => {
+    joinRoom({ username, roomId });
   };
+
   return (
     <div style={{ padding: "20px", fontFamily: "Arial" }}>
       <h1>Test Socket.IO</h1>
@@ -59,10 +41,7 @@ const JoinRoom = () => {
         value={roomId}
         onChange={(e) => setRoomId(e.target.value)}
       />
-      <button onClick={joinRoom}>Rejoindre</button>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <hr />
+      <button onClick={handleJoinRoom}>Rejoindre</button>
     </div>
   );
 };
