@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { SocketContext } from "../../context/socketProvider";
-import { useCreateRoom } from "../../api/createRoom/api";
+import { useCreateRoom } from "../../api/createRoom/useCreateRoom";
 
 const CreateRoom = () => {
   const [category, setCategory] = useState("");
