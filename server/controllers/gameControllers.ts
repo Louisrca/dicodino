@@ -49,25 +49,3 @@ export const getLobbyInformationById = async (
     next(error);
   }
 };
-
-export const getUserInformationById = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  const { id } = req.params;
-
-  if (!id || Array.isArray(id)) {
-    return res.status(400).json({ error: "Invalid user id" });
-  }
-
-  try {
-    const user = await prisma.player.findUnique({ where: { id } });
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.status(200).json(user);
-  } catch (error) {
-    next(error);
-  }
-};
