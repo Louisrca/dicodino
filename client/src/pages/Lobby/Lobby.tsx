@@ -24,7 +24,6 @@ const Lobby = () => {
   useEffect(() => {
     if (!roomId) return;
 
-    //créer un hook pour fetch lobby info (players, category) et l'appeler ici
     void (async () => {
       setIsLoading(true);
       try {
@@ -66,6 +65,7 @@ const Lobby = () => {
 
     socket.on("room:update", handleRoomUpdate);
 
+    // créer un hook pour start game
     const handleGameStart = (data: { message: string }) => {
       console.log("Game started:", data.message);
       navigate(`/room/${roomId}`);
