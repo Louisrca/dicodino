@@ -72,34 +72,21 @@ async function updatePlayer(playerId: string, data: any) {
 
 io.on("connection", (socket) => {
   console.log(`New connection: ${socket.id}`);
-  socket.on("connect", () => {
-    console.log(`Client connected: ${socket.id}`);
-  });
 
-    socket.on("chat", (msg) => {
+  socket.on("chat", (msg) => {
     console.log("message: " + msg);
-    
+
     const isCorrect = wordsMatch(msg, currentWord);
-    
+
     if (isCorrect) {
-      // bonne reponse
       console.log("Quelqu'un a trouvé le mot !");
-      
       io.to("room1").emit("chat", {
         type: "system",
-        message: `Un joueur a trouvé le mot : "${currentWord}" !`
+        message: `Un joueur a trouvé le mot : "${currentWord}" !`,
       });
-      
-      io.to("room1").emit("word_found", {
-        word: currentWord
-      });
-      
+      io.to("room1").emit("word_found", { word: currentWord });
     } else {
-      // mauvaise reponse
-      io.to("room1").emit("chat", {
-        type: "player",
-        message: msg
-      });
+      io.to("room1").emit("chat", { type: "player", message: msg });
     }
   });
 
@@ -162,10 +149,13 @@ io.on("connection", (socket) => {
     const u = trimString(username);
     const r = trimString(roomId);
 
+    if (!r) {
+      return ack?.({ ok: false, error: "Invalid room ID" });
+    }
+
     console.log(`📥 room:join attempt - username: "${u}", roomId: "${r}", socketId: ${socket.id}`);
 
     if (!isValidUsername(u)) {
-      console.log(`❌ Invalid username: "${u}"`);
       return ack?.({ ok: false, error: "Invalid username" });
     }
 
@@ -261,6 +251,10 @@ io.on("connection", (socket) => {
   socket.on("room:leave", async (roomId: string, ack?: unknown) => {
     const r = trimString(roomId);
 
+    if (!r) {
+      return reply(ack, { ok: false, error: "Invalid room ID" });
+    }
+
     try {
       const player = await prisma.player.findFirst({
         where: { socketId: socket.id, roomId: r, connected: true },
@@ -274,21 +268,21 @@ io.on("connection", (socket) => {
       const isHost = room.hostId === player.id;
 
       if (isHost) {
-        // L'hôte quitte: fermer la room pour tous
+        // L'hôte quitte : tous les joueurs sont exclus, la room reste en base
         io.to(r).emit("room:closed", { message: "Host left, room closed" });
         io.in(r).socketsLeave(r);
 
         await prisma.player.updateMany({
           where: { roomId: r, connected: true },
-          data: { connected: false },
+          data: { roomId: null, connected: false },
         });
 
-        console.log(`Host left, room ${r} closed`);
+        console.log(`Host left, room ${r} (room kept in DB)`);
         return reply(ack, { ok: true, roomId: r, closed: true });
       }
 
       // Joueur normal qui quitte
-      await updatePlayer(player.id, { connected: false });
+      await updatePlayer(player.id, { roomId: null, connected: false });
       await socket.leave(r);
       await roomUpdate(r, io);
 
@@ -302,35 +296,23 @@ io.on("connection", (socket) => {
 
   // Déconnexion
   socket.on("disconnect", async () => {
-    console.log("Disconnect:", socket.id);
-
-    try {
-      const player = await prisma.player.findFirst({
-        where: { socketId: socket.id, connected: true },
-      });
-
-      if (!player) return;
-
-      const r = player.roomId;
-      if (!r) {
-        await updatePlayer(player.id, { connected: false, socketId: null });
-        return;
-      }
-
-      const room = await prisma.room.findUnique({ where: { id: r } });
-      if (!room) {
-        await updatePlayer(player.id, { connected: false, socketId: null });
-        return;
-      }
-
-      const isHost = room.hostId === player.id;
-
-      await updatePlayer(player.id, { connected: false, socketId: null });
-      await roomUpdate(r, io);
-
-      console.log(`Player ${player.username} disconnected`);
-    } catch (error) {
-      console.error("Error on disconnect:", error);
+    const player = await prisma.player.findFirst({
+      where: { socketId: socket.id, connected: true },
+    });
+  
+    if (!player) return;
+  
+    const r = player.roomId;
+    const room = r ? await prisma.room.findUnique({ where: { id: r } }) : null;
+  
+    await updatePlayer(player.id, {
+      connected: false,
+      roomId: null,
+      socketId: null,
+    });
+  
+    if (room) {
+      await roomUpdate(r!, io);
     }
   });
 });
