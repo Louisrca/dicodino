@@ -1,0 +1,17 @@
+@font-face {
+  font-family: "Comico";
+  src: url("./fonts/comico/Comico-Regular.otf") format("truetype");
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  width: 100vw;
+  font-family: "Comico";
+}
+
+.headerContent {
+  display: flex;
+  flex-direction: row;
+  cursor: pointer;
+}
