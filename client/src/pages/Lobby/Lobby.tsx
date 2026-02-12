@@ -111,71 +111,69 @@ const Lobby = () => {
 
   if (!roomId) {
     return (
-      <div>
-        <p style={{ color: "red" }}>Room introuvable</p>
-        <button onClick={() => navigate("/")}>Retour à l'accueil</button>
+      <div className={styles.errorPage}>
+        <p className={styles.errorMessage}>Room introuvable</p>
+        <button
+          className={styles.backButton}
+          type="button"
+          onClick={() => navigate("/")}
+        >
+          Retour à l'accueil
+        </button>
       </div>
     );
   }
 
   if (isLoading) {
-    return <div>Chargement...</div>;
+    return <div className={styles.loading}>Chargement...</div>;
   }
 
   return (
-    <div>
-      <h2>Lobby</h2>
-      <span style={{ fontSize: "12px" }}>
-        Room ID:
-        <span
-          style={{
-            fontWeight: "bold",
-            color: "#fffce1",
-            textTransform: "uppercase",
-          }}
-        >
-          {roomId}
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <h2 className={styles.title}>Lobby</h2>
+        <p className={styles.subtitle}>
+          En attente des joueurs...
+        </p>
+        <span className={styles.roomId}>
+          Room ID: <span className={styles.roomIdValue}>{roomId}</span>
         </span>
-      </span>
-      <hr />
-      <h3>Catégorie: {category}</h3>
-      <p style={{ fontSize: "12px", color: "#888" }}>
-        Nombre de joueurs: {players.length}
-      </p>
-      <p style={{ fontSize: "12px", color: "#888" }}>Pseudos en cours:</p>
-      <ul>
-        {players.map((player, index) => (
-          <li
-            key={player.id || index}
-            style={{
-              fontSize: "12px",
-              color:
+        <hr className={styles.divider} />
+        <h3 className={styles.sectionTitle}>Catégorie: {category}</h3>
+        <p className={styles.meta}>Nombre de joueurs: {players.length}</p>
+        <p className={styles.meta}>Joueurs présents :</p>
+        <ul className={styles.playerList}>
+          {players.map((player, index) => (
+            <li
+              key={player.id || index}
+              className={
                 player.username?.toLowerCase() ===
                 localStoragePlayer.username?.toLowerCase()
-                  ? "#0f0"
-                  : "#fffce1",
-            }}
-          >
-            {player.username}{" "}
-            {player.username?.toLowerCase() ===
-              localStoragePlayer.username?.toLowerCase() && "(vous)"}
-          </li>
-        ))}
-      </ul>
-      <div className={styles.lobbyButtonsContainer}>
-        {localStoragePlayer.isHost && (
+                  ? styles.playerItemYou
+                  : styles.playerItem
+              }
+            >
+              {player.username}{" "}
+              {player.username?.toLowerCase() ===
+                localStoragePlayer.username?.toLowerCase() && "(vous)"}
+            </li>
+          ))}
+        </ul>
+        <div className={styles.lobbyButtonsContainer}>
+          {localStoragePlayer.isHost && (
+            <SpinButton
+              disabled={players.length < 2}
+              title="Lancer la partie"
+              variant="primary"
+              handleAction={handleStartGame}
+            />
+          )}
           <SpinButton
-            disabled={players.length < 2}
-            title="Lancer la partie"
-            variant="primary"
-            handleAction={handleStartGame}
+            handleAction={handleLeave}
+            title="Quitter la room"
+            variant="secondary"
           />
-        )}
-        <SpinButton
-          handleAction={handleLeave}
-          title="Quitter la room"
-          variant="secondary"
-        />
+        </div>
       </div>
     </div>
   );

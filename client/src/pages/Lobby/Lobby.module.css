@@ -1,5 +1,124 @@
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.card {
+  background-color: rgba(255, 252, 225, 0.06);
+  border: 1px solid rgba(255, 252, 225, 0.2);
+  padding: 32px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fffce1;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  font-size: 0.9rem;
+  color: rgba(255, 252, 225, 0.7);
+}
+
+.roomId {
+  font-size: 0.75rem;
+  color: rgba(255, 252, 225, 0.7);
+  margin-bottom: 16px;
+}
+
+.roomIdValue {
+  font-weight: 600;
+  color: #fffce1;
+  text-transform: uppercase;
+}
+
+.divider {
+  border: none;
+  height: 1px;
+  background-color: rgba(255, 252, 225, 0.2);
+  margin: 0 0 20px;
+}
+
+.sectionTitle {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fffce1;
+}
+
+.meta {
+  font-size: 0.75rem;
+  color: rgba(255, 252, 225, 0.6);
+  margin: 0 0 8px;
+}
+
+.playerList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+
+.playerItem {
+  font-size: 0.85rem;
+  color: #fffce1;
+  padding: 6px 0;
+}
+
+.playerItemYou {
+  color: #8eff48;
+}
+
 .lobbyButtonsContainer {
-  display: "flex";
-  flex-direction: "row";
-  gap: "10px";
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.errorPage {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.errorMessage {
+  color: #ff6b6b;
+  margin-bottom: 16px;
+}
+
+.loading {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: rgba(255, 252, 225, 0.7);
+}
+
+.backButton {
+  background-color: transparent;
+  border: 1px solid rgba(255, 252, 225, 0.3);
+  padding: 12px 20px;
+  color: #fffce1;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.backButton:hover {
+  border-color: #8eff48;
 }
