@@ -1,6 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { SocketContext } from "../../context/socketProvider";
 import { useJoinRoom } from "../../api/joinRoom/useJoinRoom";
+import SpinButton from "../../components/SpinButton/SpinButton";
+import styles from "./JoinRoom.module.css";
 
 const JoinRoom = () => {
   const [username, setUsername] = useState("");
@@ -27,21 +29,38 @@ const JoinRoom = () => {
   };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h1>Test Socket.IO</h1>
-
-      <h2>Rejoindre une room</h2>
-      <input
-        placeholder="Pseudo"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <input
-        placeholder="Room ID"
-        value={roomId}
-        onChange={(e) => setRoomId(e.target.value)}
-      />
-      <button onClick={handleJoinRoom}>Rejoindre</button>
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <h1 className={styles.title}>Rejoindre une room</h1>
+        <p className={styles.subtitle}>Entre ton pseudo et l’ID de la room</p>
+        <form
+          className={styles.form}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleJoinRoom();
+          }}
+        >
+          <input
+            className={styles.input}
+            placeholder="Pseudo"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <input
+            className={styles.input}
+            placeholder="Room ID"
+            value={roomId}
+            onChange={(e) => setRoomId(e.target.value)}
+          />
+          <div className={styles.buttonWrap}>
+            <SpinButton
+              title="Rejoindre"
+              variant="primary"
+              handleAction={handleJoinRoom}
+            />
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
