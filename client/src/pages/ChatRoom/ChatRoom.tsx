@@ -19,8 +19,9 @@ const ChatRoom = () => {
   const { roomId } = useParams();
 
   const [messages, setMessages] = useState<Message[]>([]);
-
-  const [currentDefinition, setCurrentDefinition] = useState("");
+  const [currentDefinition, setCurrentDefinition] = useState(
+    () => localStorage.getItem("currentDefinition") || "",
+  );
 
   useEffect(() => {
     getMessageByRoomId(roomId || "")
@@ -50,7 +51,6 @@ const ChatRoom = () => {
         localStorage.removeItem("currentDefinition");
       }
       localStorage.setItem("currentDefinition", data.definition);
-
       setCurrentDefinition(data.definition);
     });
 

@@ -11,10 +11,11 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [socketId, setSocketId] = useState<string | undefined>(undefined);
   const [message, setMessage] = useState("");
-
+  
   const player = JSON.parse(
     localStorage.getItem("player") || '{"username":"Anonyme"}',
   );
+
 
   useEffect(() => {
     const newSocket = io("http://localhost:8081");
