@@ -60,49 +60,7 @@ io.on("connection", (socket) => {
 
   // Quitter une room
   socket.on("room:leave", async (roomId: string, ack?: unknown) => {
-    const r = trimString(roomId);
-
-    if (!r) {
-      return reply(ack, { ok: false, error: "Invalid room ID" });
-    }
-
-    try {
-      const player = await prisma.player.findFirst({
-        where: { socketId: socket.id, roomId: r, connected: true },
-      });
-
-      if (!player) return reply(ack, { ok: false, error: "Not in this room" });
-
-      const room = await prisma.room.findUnique({ where: { id: r } });
-      if (!room) return reply(ack, { ok: false, error: "Room not found" });
-
-      const isHost = room.hostId === player.id;
-
-      if (isHost) {
-        // L'hôte quitte : tous les joueurs sont exclus, la room reste en base
-        io.to(r).emit("room:closed", { message: "Host left, room closed" });
-        io.in(r).socketsLeave(r);
-
-        await prisma.player.updateMany({
-          where: { roomId: r, connected: true },
-          data: { roomId: null, connected: false },
-        });
-
-        console.log(`Host left, room ${r} (room kept in DB)`);
-        return reply(ack, { ok: true, roomId: r, closed: true });
-      }
-
-      // Joueur normal qui quitte
-      await updatePlayer(player.id, { roomId: null, connected: false });
-      await socket.leave(r);
-      await roomUpdate(r, io);
-
-      console.log(`${player.username} left room ${r}`);
-      reply(ack, { ok: true, roomId: r });
-    } catch (error) {
-      console.error("Error leaving room:", error);
-      reply(ack, { ok: false, error: "Server error" });
-    }
+    
   });
 
   socket.on("room:join-socket", async (roomId: string, ack?: Function) => {
