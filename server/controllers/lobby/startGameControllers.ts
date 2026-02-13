@@ -1,10 +1,12 @@
 import { io } from "../../index.ts";
+import { prisma } from "../../lib/prisma.ts";
+import { randomDefinition } from "../../utils/utils.ts";
 
 interface StartGamePayload {
   roomId: string;
 }
   
-  export const StartGameControllers = ({ roomId }: StartGamePayload) => {
+  export const StartGameControllers = async ({ roomId }: StartGamePayload) => {
     if (!roomId) {
       io.emit("room:error", { message: "Room ID is required" });
       return;
@@ -19,9 +21,34 @@ interface StartGamePayload {
 
     console.log(`Game started in room ${roomId}`);
 
+    const definition = randomDefinition("dino").definition;
+    const answer = randomDefinition("dino").name;
+
+    const round = await prisma.round.create({
+      data: {
+        roomId,
+        currentDefinition: definition,
+        roundNumber: 1,
+        currentAnswer: answer,
+        roundStarted: true,
+      },
+    });
+
+    if(!round) {
+      io.emit("room:error", { message: "Failed to start game" });
+      return;
+    }
+
     // Emit à toute la room
     io.to(roomId).emit("room:gameStarted", {
       message: "The game has started!",
       roomId,
+      round: round.id,
+      definition,
     });
+
+    io.to(roomId).emit("room:newWordReady", { definition });
+
+    console.log(`New word ready: ${definition}`);
+    console.log(`Room ${roomId} game started`);
   };

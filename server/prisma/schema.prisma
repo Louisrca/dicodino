@@ -50,6 +50,7 @@ model Round {
   currentDefinition String
   currentAnswer     String
   winnerId          String?
+  roundStarted      Boolean  @default(false)
 
   room              Room     @relation(fields: [roomId], references: [id])
 }

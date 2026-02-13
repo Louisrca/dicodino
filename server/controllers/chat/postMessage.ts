@@ -1,6 +1,7 @@
 import type { NextFunction, Response, Request } from "express";
 import { prisma } from "../../lib/prisma.ts";
 import { io } from "../../index.ts";
+import { wordsMatch } from "../../utils/utils.ts";
 
 export const postMessage = async (
   req: Request,
@@ -31,6 +32,15 @@ export const postMessage = async (
         senderId: senderId,
       },
     });
+
+    const currentRound = await prisma.round.findFirst({
+      where: { roomId: id, roundStarted: true },
+    });
+
+    const isCorrect = await wordsMatch(message, currentRound?.currentDefinition || "");
+
+
+    console.log("🚀 ~ postMessage ~ isCorrect:", isCorrect);
 
     res.status(200).json(uploadedMessage);
 
