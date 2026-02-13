@@ -95,7 +95,7 @@ const ChatRoom = () => {
 
   return (
     <div className={styles.chatRoomContainer}>
-      <div className="header">
+      <div className={styles.headerWrapper}>
         <RoomHeader definition={currentDefinition} round={round} />
       </div>
       <div className={styles.messagesContainer}>
@@ -113,8 +113,16 @@ const ChatRoom = () => {
         ))}
       </div>
       <div className={styles.inputContainer}>
-        <TextArea setMessage={setMessage} />
-        <button onClick={sendMessage}>Send</button>
+        <TextArea
+          setMessage={setMessage}
+          className={styles.textAreaWrapper}
+          inputClassName={styles.chatTextArea}
+          placeholder="Écris ton message…"
+          rows={2}
+        />
+        <button type="button" className={styles.sendButton} onClick={sendMessage}>
+          Envoyer
+        </button>
       </div>
     </div>
   );

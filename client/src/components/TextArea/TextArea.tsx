@@ -1,18 +1,27 @@
 import styles from "./TextArea.module.css";
 
+type TextAreaProps = {
+  setMessage: React.Dispatch<React.SetStateAction<string>>;
+  className?: string;
+  inputClassName?: string;
+  placeholder?: string;
+  rows?: number;
+};
+
 const TextArea = ({
   setMessage,
-}: {
-  setMessage: React.Dispatch<React.SetStateAction<string>>;
-}) => {
+  className,
+  inputClassName,
+  placeholder = "Écris ton message…",
+  rows = 2,
+}: TextAreaProps) => {
   return (
-    <div>
+    <div className={className ?? undefined}>
       <textarea
-        placeholder="Type your message here..."
-        rows={4}
-        cols={50}
+        placeholder={placeholder}
+        rows={rows}
         onChange={(e) => setMessage(e.target.value)}
-        className={styles.textArea}
+        className={inputClassName ?? styles.textArea}
       />
     </div>
   );

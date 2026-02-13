@@ -2,9 +2,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 1;
-  min-height: 40rem;
-  max-height: 40rem;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  height: calc(100vh - 100px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.headerWrapper {
+  flex-shrink: 0;
+  width: 100%;
 }
 
 .roomHeader {
@@ -20,6 +28,7 @@
   font-size: 13px;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
 }
 
 .myMessage {
@@ -46,9 +55,63 @@
 .inputContainer {
   display: flex;
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   box-sizing: border-box;
-  justify-content: center;
   align-items: flex-end;
   flex-shrink: 0;
+  gap: 10px;
+  background-color: rgba(14, 16, 15, 0.98);
+}
+
+.textAreaWrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.chatTextArea {
+  width: 100%;
+  min-height: 44px;
+  max-height: 120px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #fffce1;
+  background-color: rgba(255, 252, 225, 0.08);
+  border: 1px solid rgba(255, 252, 225, 0.2);
+  border-radius: 12px;
+  resize: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.chatTextArea::placeholder {
+  color: rgba(255, 252, 225, 0.4);
+}
+
+.chatTextArea:focus {
+  outline: none;
+  border-color: rgba(142, 255, 72, 0.5);
+  background-color: rgba(255, 252, 225, 0.1);
+}
+
+.sendButton {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #0e100f;
+  background-color: #8eff48;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.sendButton:hover {
+  background-color: #7ae63d;
+}
+
+.sendButton:active {
+  transform: scale(0.98);
 }
