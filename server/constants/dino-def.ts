@@ -4,7 +4,7 @@ export const DinoDef: Definition[] = [
   {
     id: 1,
     name: "tyrannosaurus rex",
-    derived: ["tyrannosaurus", "t-rex", "trex"],
+    derived: ["tyrannosaurus rex, tyrannosaurus", "t-rex", "trex"],
     definition:
       "One of the largest land carnivores of all time, known for its powerful jaws and tiny arms.",
   },

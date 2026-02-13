@@ -4,10 +4,14 @@ import SpinButton from "../../components/SpinButton/SpinButton";
 import { SocketContext } from "../../context/socketProvider";
 import styles from "./Lobby.module.css";
 import type { Player } from "../../types/players";
+import { useGameStart } from "../../api/lobby/useStartGame";
 
 const Lobby = () => {
   const { lobbyId } = useParams();
   const navigate = useNavigate();
+
+  const { startGame } = useGameStart();
+
   const localStoragePlayer = JSON.parse(
     localStorage.getItem("player") || '{"username":"Anonyme"}',
   );
@@ -16,7 +20,6 @@ const Lobby = () => {
 
   const [category, setCategory] = useState("");
   const [players, setPlayers] = useState<Player[]>([]);
-  console.log("🚀 ~ Lobby ~ players:", players);
   const [roomIdState, setRoomIdState] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -65,19 +68,22 @@ const Lobby = () => {
       }
     };
 
+    const handleGameStarted = (data: {
+      message: string;
+      id: string;
+      round: string;
+      definition: string;
+    }) => {
+      console.log("🚀 ~ handleGameStarted ~ data:", data);
+      if (data.id === roomId) {
+        startGame(roomId);
+        navigate(`/room/${data.id}`);
+      }
+    };
+
+    socket.on("room:gameStarted", handleGameStarted);
+
     socket.on("room:update", handleRoomUpdate);
-
-    // créer un hook pour start game
-    const handleGameStart = (data: { message: string }) => {
-      console.log("Game started:", data.message);
-      navigate(`/room/${roomId}`);
-    };
-
-    socket.on("room:gameStarted", handleGameStart);
-
-    return () => {
-      socket.off("room:gameStarted", handleGameStart);
-    };
   }, [socket, roomId, roomIdState]);
 
   // créer un hook pour leave room
@@ -87,8 +93,7 @@ const Lobby = () => {
       roomId || roomIdState,
       (response: { ok: boolean; error?: string }) => {
         if (response.ok) {
-          localStorage.removeItem("roomId");
-          localStorage.removeItem("username");
+          localStorage.removeItem("player");
           navigate("/");
         } else {
           console.error("Error leaving room:", response.error);
@@ -99,15 +104,8 @@ const Lobby = () => {
 
   // créer un hook pour start game
   const handleStartGame = () => {
-    socket?.emit(
-      "room:gameStart",
-      roomId,
-      (response: { ok: boolean; error?: string }) => {
-        if (!response.ok) {
-          console.error("Error starting game:", response.error);
-        }
-      },
-    );
+    if (!roomId) return;
+    startGame(roomId);
   };
 
   if (!roomId) {

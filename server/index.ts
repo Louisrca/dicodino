@@ -6,12 +6,10 @@ import { prisma } from "./lib/prisma.ts";
 import { gameRoutes } from "./routes/gameRoutes.ts";
 import {
   formalizeUsername,
-  randomDefinition,
   reply,
   roomUpdate,
   trimString,
   updatePlayer,
-  wordsMatch,
 } from "./utils/utils.ts";
 
 const app = express();
@@ -65,28 +63,6 @@ io.on("connection", (socket) => {
     },
   );
 
-  //  mot suivant
-  socket.on("next_word", () => {
-    console.log("Passage au mot suivant");
-    io.to("room1").emit("new_word_ready");
-  });
-
-  // terminer la partie
-  socket.on("end_game", () => {
-    console.log("Fin de partie");
-    io.to("room1").emit("game_ended");
-  });
-
-  // room:gameStart
-  socket.on("room:gameStart", async (roomId: string, ack?: Function) => {
-    const r = trimString(roomId);
-
-    io.to(r).emit("room:gameStarted", { message: "The game has started!" });
-    io.to(r).emit("room:newWordReady", {
-      definition: randomDefinition("dino").definition,
-    });
-  });
-
   // Quitter une room
   socket.on("room:leave", async (roomId: string, ack?: unknown) => {
     const r = trimString(roomId);
@@ -134,13 +110,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on(
-    "random-definition",
-    ({ roomId, category }: { roomId: string; category: string }) => {
-      io.to(roomId).emit("definition", randomDefinition(category).definition);
-    },
-  );
-
   socket.on("room:join-socket", async (roomId: string, ack?: Function) => {
     const r = trimString(roomId);
 
@@ -154,10 +123,6 @@ io.on("connection", (socket) => {
       console.error("Error joining socket room:", error);
       ack?.({ ok: false });
     }
-  });
-
-  socket.on("disconnect", () => {
-    console.log("user disconnected:", socket.id);
   });
 
   // Déconnexion

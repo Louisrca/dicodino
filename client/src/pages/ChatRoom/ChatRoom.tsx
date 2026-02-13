@@ -19,6 +19,9 @@ const ChatRoom = () => {
   const { roomId } = useParams();
 
   const [messages, setMessages] = useState<Message[]>([]);
+  const [currentDefinition, setCurrentDefinition] = useState(
+    () => localStorage.getItem("currentDefinition") || "",
+  );
 
   useEffect(() => {
     getMessageByRoomId(roomId || "")
@@ -48,12 +51,13 @@ const ChatRoom = () => {
         localStorage.removeItem("currentDefinition");
       }
       localStorage.setItem("currentDefinition", data.definition);
+      setCurrentDefinition(data.definition);
     });
 
     return () => {
       socket.off("newMessage", handleNewMessage);
     };
-  }, [socket]);
+  }, [socket, currentDefinition]);
 
   const sendMessage = () => {
     postMessage(roomId || "", localStoragePlayer.id, message);
@@ -62,9 +66,7 @@ const ChatRoom = () => {
   return (
     <div className={styles.chatRoomContainer}>
       <div className="header">
-        <RoomHeader
-          definition={localStorage.getItem("currentDefinition") || ""}
-        />
+        <RoomHeader definition={currentDefinition} />
       </div>
       <div className={styles.messagesContainer}>
         {messages.map((message: Message) => (
