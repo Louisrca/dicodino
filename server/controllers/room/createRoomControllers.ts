@@ -1,10 +1,9 @@
 import type { Request, Response } from "express";
 import { io } from "../../index.ts";
 import { prisma } from "../../lib/prisma.ts";
+import type { JwtPayload } from "../../auth/jwt.ts";
 import {
-  getOrCreatePlayer,
   isValidCategory,
-  isValidUsername,
   roomUpdate,
   trimString,
   uniqueRoomId,
@@ -12,19 +11,17 @@ import {
 } from "../../utils/utils.ts";
 
 export const createRoom = async (req: Request, res: Response) => {
-  const { username, category } = req.body;
-
-  const u = trimString(username);
+  const { playerId } = (req as Request & { jwtPlayer: JwtPayload }).jwtPlayer;
+  const { category } = req.body;
   const c = trimString(category);
 
-  if (!isValidUsername(u))
-    throw new Error(
-      "Invalid username. Must be 3-20 characters, no special chars.",
-    );
   if (!isValidCategory(c)) throw new Error("Invalid category.");
 
   try {
-    const player = await getOrCreatePlayer(u);
+    const player = await prisma.player.findUnique({ where: { id: playerId } });
+    if (!player) {
+      return res.status(401).json({ ok: false, error: "Joueur introuvable" });
+    }
 
     if (player.connected && player.roomId) {
       return res.status(400).json({
@@ -51,27 +48,26 @@ export const createRoom = async (req: Request, res: Response) => {
     }
 
     if (!room) {
-      console.log(`Failed to create room for ${u}`);
+      console.log(`Failed to create room for ${player.username}`);
       return res
         .status(500)
         .json({ ok: false, error: "Failed to create room" });
     }
 
     const updatedPlayer = await updatePlayer(player.id, {
-      username: u,
       roomId,
       connected: true,
       score: 0,
     });
 
     if (!updatedPlayer) {
-      console.log(`Failed to update player ${u} with room ${roomId}`);
-      return { res: { ok: false, error: "Failed to join room" } };
+      console.log(`Failed to update player ${player.username} with room ${roomId}`);
+      return res.status(500).json({ ok: false, error: "Failed to join room" });
     }
 
     await roomUpdate(roomId, io);
 
-    console.log(`Room ${roomId} created by ${u}`);
+    console.log(`Room ${roomId} created by ${player.username}`);
 
     res.status(201).json({
       ok: true,

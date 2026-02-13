@@ -7,11 +7,14 @@ import { StartGameControllers } from "../controllers/lobby/startGameControllers.
 import { getLobbyInformationById } from "../controllers/lobby/lobbyInfoControllers.ts";
 import { createUser } from "../controllers/user/createUser.ts";
 import { roundController } from "../controllers/round/roundController.ts";
+import { claimController } from "../controllers/auth/claimController.ts";
+import { requireAuth } from "../auth/jwt.ts";
 
 const router = Router();
 
-router.post("/room/create", createRoom);
-router.post("/room/join", joinRoomController);
+router.post("/auth/claim", claimController);
+router.post("/room/create", requireAuth, createRoom);
+router.post("/room/join", requireAuth, joinRoomController);
 router.post("/room/:id/message/:senderId", postMessage);
 router.post("/lobby/:id/start", StartGameControllers);
 router.post("/user/createUser", createUser);
