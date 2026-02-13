@@ -5,9 +5,11 @@ export const useRoomMessage = () => {
   const getMessageByRoomId = async (
     roomId: string,
   ): Promise<Message[] | undefined> => {
+    if (!roomId) return undefined;
     try {
-      const res = await fetch(`${API_BASE_URL}room/message/${roomId}`);
-      const data: Message[] = await res.json();
+      const res = await fetch(`${API_BASE_URL}/room/message/${roomId}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
       return data;
     } catch (err) {
       console.error("Error fetching messages:", err);

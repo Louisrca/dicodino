@@ -15,11 +15,13 @@ export const useJoinRoom = () => {
     username: string;
     roomId: string;
   }) => {
+
+    const roomIdLowercase = roomId.toLowerCase();
     try {
       const res = await fetch(`${API_BASE_URL}/room/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, roomId }),
+        body: JSON.stringify({ username, roomId: roomIdLowercase }),
       });
 
       const data: {
