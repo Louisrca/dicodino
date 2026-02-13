@@ -1,20 +1,16 @@
 import gsap from "gsap";
-import { useContext, useEffect, useRef, useState } from "react";
+import {  useEffect, useRef, useState } from "react";
 import SpinButton from "../../components/SpinButton/SpinButton";
 import style from "./Home.module.css";
-import { SocketContext } from "../../context/socketProvider";
+import { useLeaveRoom } from "../../api/leaveRoom/useLeaveRoom";
 
 const Home = () => {
   const [isAnimating, setIsAnimating] = useState(false)
 
-  
-const [isInRoom, setIsInRoom] = useState(
-  localStorage.getItem("player") ? true : false);
+  const { leaveRoom } = useLeaveRoom();
 
-  const localStoragePlayer = JSON.parse(
-    localStorage.getItem("player") || '{"username":"Anonyme"}',
-  );
-  const { socket } = useContext(SocketContext);
+const isInRoom = localStorage.getItem("player") ? true : false;
+
 
   const spanRef = useRef<HTMLSpanElement>(null);
 
@@ -41,22 +37,6 @@ const [isInRoom, setIsInRoom] = useState(
   ));
 
 
-  const handleLeave = () => {
-
-    socket?.emit(
-      "room:leave",
-      localStoragePlayer.roomId,
-      (response: { ok: boolean; error?: string }) => {
-        if (response.ok) {
-          localStorage.removeItem("player");
-          setIsInRoom(false);
-        } else {
-          console.error("Error leaving room:", response.error);
-        }
-      },
-    );
-  };
-
   return (
     <div className={style.home}>
       <h1>
@@ -68,7 +48,7 @@ const [isInRoom, setIsInRoom] = useState(
 
 {
   isInRoom && (
-    <button className={style.currentDefinition} onClick={handleLeave}>
+    <button className={style.currentDefinition} onClick={leaveRoom}>
         leave current room
       </button>
   )}

@@ -9,6 +9,7 @@ import { createUser } from "../controllers/user/createUser.ts";
 import { roundController } from "../controllers/round/roundController.ts";
 import { claimController } from "../controllers/auth/claimController.ts";
 import { requireAuth } from "../auth/jwt.ts";
+import { leaveRoomController } from "../controllers/room/leaveRoomController.ts";
 
 const router = Router();
 
@@ -18,6 +19,7 @@ router.post("/room/join", requireAuth, joinRoomController);
 router.post("/room/:id/message/:senderId", postMessage);
 router.post("/lobby/:id/start", StartGameControllers);
 router.post("/user/createUser", createUser);
+router.post("/room/leave", leaveRoomController);
 
 router.get("/room/:id/round/results", roundController);
 router.get("/room/message/:id", getMessageByRoomId);
