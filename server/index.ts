@@ -78,16 +78,16 @@ io.on("connection", (socket) => {
   });
 
   // room:gameStart
-  socket.on("room:gameStart", async (roomId: string, ack?: Function) => {
-    const r = trimString(roomId);
-    const definition = randomDefinition("dino").definition;
+  // socket.on("room:gameStart", async (roomId: string, ack?: Function) => {
+  //   const r = trimString(roomId);
+  //   const definition = randomDefinition("dino").definition;
 
-    io.to(r).emit("room:gameStarted", {
-      message: "The game has started!",
-      definition,
-    });
-    io.to(r).emit("room:newWordReady", { definition });
-  });
+  //   io.to(r).emit("room:gameStarted", {
+  //     message: "The game has started!",
+  //     definition,
+  //   });
+  //   io.to(r).emit("room:newWordReady", { definition });
+  // });
 
   // Quitter une room
   socket.on("room:leave", async (roomId: string, ack?: unknown) => {

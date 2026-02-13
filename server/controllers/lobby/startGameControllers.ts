@@ -9,9 +9,9 @@ interface StartGamePayload {
 }
 
 export const StartGameControllers = async (req: Request, res: Response) => {
-  const { id } = req.body;
+  const { id } = req.params;
 
-  if (!id) {
+  if (!id || Array.isArray(id)) {
     io.emit("room:error", { message: "Room ID is required" });
     return;
   }
@@ -25,15 +25,14 @@ export const StartGameControllers = async (req: Request, res: Response) => {
 
   console.log(`Game started in room ${id}`);
 
-  const definition = randomDefinition("dino").definition;
-  const answer = randomDefinition("dino").name;
+  const word = randomDefinition("dino");
 
   const round = await prisma.round.create({
     data: {
       roomId: id,
-      currentDefinition: definition,
+      currentDefinition: word.definition,
       roundNumber: 1,
-      currentAnswer: answer,
+      currentAnswer: word.name,
       roundStarted: true,
     },
   });
@@ -43,16 +42,15 @@ export const StartGameControllers = async (req: Request, res: Response) => {
     return;
   }
 
-  // Emit à toute la room
   io.to(id).emit("room:gameStarted", {
     message: "The game has started!",
     id,
     round: round.id,
-    definition,
+    definition: round.currentDefinition,
   });
 
-  io.to(id).emit("room:newWordReady", { definition });
+  io.to(id).emit("room:newWordReady", { definition: round.currentDefinition });
 
-  console.log(`New word ready: ${definition}`);
+  console.log(`New word ready: ${round.currentDefinition}`);
   console.log(`Room ${id} game started`);
 };

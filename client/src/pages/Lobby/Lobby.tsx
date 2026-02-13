@@ -68,7 +68,12 @@ const Lobby = () => {
       }
     };
 
-    const handleGameStarted = (data: { message: string; id: string }) => {
+    const handleGameStarted = (data: {
+      message: string;
+      id: string;
+      round: string;
+      definition: string;
+    }) => {
       console.log("🚀 ~ handleGameStarted ~ data:", data);
       if (data.id === roomId) {
         startGame(roomId);
@@ -88,8 +93,7 @@ const Lobby = () => {
       roomId || roomIdState,
       (response: { ok: boolean; error?: string }) => {
         if (response.ok) {
-          localStorage.removeItem("roomId");
-          localStorage.removeItem("username");
+          localStorage.removeItem("player");
           navigate("/");
         } else {
           console.error("Error leaving room:", response.error);
@@ -100,15 +104,8 @@ const Lobby = () => {
 
   // créer un hook pour start game
   const handleStartGame = () => {
-    socket?.emit(
-      "room:gameStart",
-      roomId,
-      (response: { ok: boolean; error?: string }) => {
-        if (!response.ok) {
-          console.error("Error starting game:", response.error);
-        }
-      },
-    );
+    if (!roomId) return;
+    startGame(roomId);
   };
 
   if (!roomId) {

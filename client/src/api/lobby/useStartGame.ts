@@ -5,7 +5,6 @@ export const useGameStart = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/lobby/${lobbyId}/start`, {
         method: "POST",
-        
       });
 
       if (!response.ok) {
@@ -14,6 +13,7 @@ export const useGameStart = () => {
 
       const data = await response.json();
       console.log("Game started successfully:", data);
+      return data;
     } catch (error) {
       console.error("Error starting game:", error);
     }
