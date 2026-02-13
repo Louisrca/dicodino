@@ -119,16 +119,29 @@ export function wordsMatch(wordToGuess: string, userAnswer: string) {
   return normalizeWord(wordToGuess) === normalizeWord(userAnswer);
 }
 
-// Helper: Trouver ou créer un player
+export function wordsMatchAny(acceptedAnswers: string[], userAnswer: string): boolean {
+  if (!acceptedAnswers?.length) return false;
+  const normalizedUser = normalizeWord(userAnswer);
+  return acceptedAnswers.some((a) => normalizeWord(a) === normalizedUser);
+}
+
+export function getAcceptedAnswers(
+  category: string,
+  currentDefinition: string,
+): string[] {
+  const list = switchCategory(category);
+  const def = list.find((d) => d.definition === currentDefinition);
+  if (!def) return [];
+  return [def.name, ...(def.derived ?? [])];
+}
+
 export async function getOrCreatePlayer(username: string) {
   const formalUsername = formalizeUsername(username);
 
-  // D'abord chercher par username (reconnexion du même client)
   let player = await prisma.player.findFirst({
     where: { username: formalUsername },
   });
 
-  // Si trouvé par username, on le met à jour avec le nouveau username
   if (player) {
     return await prisma.player.update({
       where: { id: player.id },
