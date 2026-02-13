@@ -1,8 +1,10 @@
 import { useState } from "react";
 
 const Timer = () => {
-  const [timeLeft, setTimeLeft] = useState(60); // 60 seconds timer
+  const [timeLeft, setTimeLeft] = useState(60); 
   const [round, setRound] = useState(1);
+  
+
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -12,20 +14,28 @@ const Timer = () => {
 
   const countdown = () => {
     if (timeLeft > 0) {
-      setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      setTimeout(() => {
+       
+        setTimeLeft(timeLeft - 1) }
+      , 1000);
     }
 
     if (timeLeft === 0) {
       setRound(round + 1);
       setTimeLeft(60);
+
+      localStorage.setItem("timeLeft", timeLeft.toString());
+      localStorage.setItem("round", round.toString());
+
+     
     }
 
     if (round > 5) {
-      // Handle end of game logic here
-      //   alert("Game Over! Thanks for playing.");
-      //   setRound(1);
+      console.log("Game Over! Thanks for playing.");
     }
   };
+
+  
 
   countdown();
 

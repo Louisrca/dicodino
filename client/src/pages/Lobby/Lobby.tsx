@@ -74,17 +74,15 @@ const Lobby = () => {
       round: string;
       definition: string;
     }) => {
-      console.log("🚀 ~ handleGameStarted ~ data:", data);
       if (data.id === roomId) {
-        startGame(roomId);
-        navigate(`/room/${data.id}`);
+        navigate(`/room/${data.id}`, { state: { definition: data.definition } });
       }
     };
 
     socket.on("room:gameStarted", handleGameStarted);
 
     socket.on("room:update", handleRoomUpdate);
-  }, [socket, roomId, roomIdState]);
+  }, [socket, roomId, roomIdState, navigate]);
 
   // créer un hook pour leave room
   const handleLeave = () => {
