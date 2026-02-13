@@ -2,6 +2,7 @@ import type { Player } from "../../types/players";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../utils/env";
 import { SocketContext } from "../../context/socketProvider";
+import { getToken, getTokenUsername, setToken, clearToken } from "../../utils/auth";
 import { useContext } from "react";
 
 export const useCreateRoom = () => {
@@ -16,11 +17,35 @@ export const useCreateRoom = () => {
     category: string;
   }) => {
     try {
+      let token = getToken();
+      const sameUser = token && getTokenUsername(token)?.toLowerCase() === username.trim().toLowerCase();
+      if (!sameUser) {
+        const claimRes = await fetch(`${API_BASE_URL}/auth/claim`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username }),
+        });
+        const claimData = await claimRes.json();
+        if (!claimData.ok) {
+          throw new Error(claimData.error || "Ce pseudo est déjà pris");
+        }
+        token = claimData.token as string;
+        setToken(token);
+      }
+      if (!token) throw new Error("Session expirée");
+
       const res = await fetch(`${API_BASE_URL}/room/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, category }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ category }),
       });
+      if (res.status === 401) {
+        clearToken();
+        throw new Error("Session expirée, réessaie");
+      }
 
       const data: {
         ok: boolean;
@@ -43,7 +68,6 @@ export const useCreateRoom = () => {
       }
 
       if (!data.ok) {
-        // ✅ Throw l'erreur pour que le catch la récupère
         throw new Error(data.error || "Failed to create room");
       }
     } catch (err) {
