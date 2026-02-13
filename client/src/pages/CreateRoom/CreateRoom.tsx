@@ -33,19 +33,14 @@ const CreateRoom = () => {
       <div className={styles.card}>
         <h1 className={styles.title}>Créer une room</h1>
         <p className={styles.subtitle}>Choisis une catégorie et ton pseudo</p>
-        <form
-          className={styles.form}
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleCreateRoom();
-          }}
-        >
+        <form className={styles.form}>
           <input
             className={styles.input}
             placeholder="Pseudo"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
+
           <input
             className={styles.input}
             placeholder="Catégorie"

@@ -24,10 +24,6 @@ export const createRoom = async (req: Request, res: Response) => {
   if (!isValidCategory(c)) throw new Error("Invalid category.");
 
   try {
-    await prisma.player.updateMany({
-      where: { username: u },
-      data: { socketId: null, connected: false },
-    });
     const player = await getOrCreatePlayer(u);
 
     if (player.connected && player.roomId) {

@@ -16,6 +16,7 @@ const Lobby = () => {
 
   const [category, setCategory] = useState("");
   const [players, setPlayers] = useState<Player[]>([]);
+  console.log("🚀 ~ Lobby ~ players:", players);
   const [roomIdState, setRoomIdState] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -57,6 +58,7 @@ const Lobby = () => {
       players: Player[];
       category: string;
     }) => {
+      console.log("🚀 ~ handleRoomUpdate ~ data:", data);
       if (data.roomId === roomId || data.roomId === roomIdState) {
         setPlayers(data.players || []);
         setCategory(data.category || "");
@@ -74,7 +76,6 @@ const Lobby = () => {
     socket.on("room:gameStarted", handleGameStart);
 
     return () => {
-      socket.off("room:update", handleRoomUpdate);
       socket.off("room:gameStarted", handleGameStart);
     };
   }, [socket, roomId, roomIdState]);
@@ -132,9 +133,7 @@ const Lobby = () => {
     <div className={styles.page}>
       <div className={styles.card}>
         <h2 className={styles.title}>Lobby</h2>
-        <p className={styles.subtitle}>
-          En attente des joueurs...
-        </p>
+        <p className={styles.subtitle}>En attente des joueurs...</p>
         <span className={styles.roomId}>
           Room ID: <span className={styles.roomIdValue}>{roomId}</span>
         </span>

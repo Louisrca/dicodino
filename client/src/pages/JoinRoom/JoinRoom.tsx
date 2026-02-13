@@ -12,12 +12,9 @@ const JoinRoom = () => {
 
   const { socket } = useContext(SocketContext);
   useEffect(() => {
-    socket?.on(
-      "room:update",
-      (data: { roomId: string; players: string[] }) => {
-        setRoomId(data.roomId);
-      },
-    );
+    socket?.on("room:update", (data: { roomId: string; players: string[] }) => {
+      setRoomId(data.roomId);
+    });
 
     return () => {
       socket?.off("room:update");
@@ -33,19 +30,14 @@ const JoinRoom = () => {
       <div className={styles.card}>
         <h1 className={styles.title}>Rejoindre une room</h1>
         <p className={styles.subtitle}>Entre ton pseudo et l’ID de la room</p>
-        <form
-          className={styles.form}
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleJoinRoom();
-          }}
-        >
+        <form className={styles.form}>
           <input
             className={styles.input}
             placeholder="Pseudo"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
+
           <input
             className={styles.input}
             placeholder="Room ID"

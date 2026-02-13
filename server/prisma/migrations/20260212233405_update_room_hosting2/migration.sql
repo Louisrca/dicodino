@@ -14,6 +14,7 @@ CREATE TABLE "Player" (
     "socketId" TEXT,
     "roomId" TEXT,
     "username" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
     "connected" BOOLEAN NOT NULL DEFAULT true,
     "score" INTEGER NOT NULL DEFAULT 0,
 

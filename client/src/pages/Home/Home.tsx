@@ -1,10 +1,11 @@
+import gsap from "gsap";
 import { useEffect, useRef, useState } from "react";
 import SpinButton from "../../components/SpinButton/SpinButton";
 import style from "./Home.module.css";
-import gsap from "gsap";
 
 const Home = () => {
   const [isAnimating, setIsAnimating] = useState(false);
+
   const spanRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ const Home = () => {
           {word}
         </span>
       </h1>
+
       <div className={style.buttonsContainer}>
         <SpinButton
           title="Join a game"

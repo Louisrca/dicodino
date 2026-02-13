@@ -5,6 +5,7 @@ import { joinRoomController } from "../controllers/room/joinRoomController.ts";
 import { getMessageByRoomId } from "../controllers/chat/getMessagesByRoomId.ts";
 import { StartGameControllers } from "../controllers/lobby/startGameControllers.ts";
 import { getLobbyInformationById } from "../controllers/lobby/lobbyInfoControllers.ts";
+import { createUser } from "../controllers/user/createUser.ts";
 
 const router = Router();
 
@@ -14,6 +15,6 @@ router.post("/room/:id/message/:senderId", postMessage);
 router.get("/room/message/:id", getMessageByRoomId);
 router.get("/lobby/:id", getLobbyInformationById);
 router.post("/lobby/:id/start", StartGameControllers);
-
+router.post("/user/createUser", createUser);
 
 export { router as gameRoutes };

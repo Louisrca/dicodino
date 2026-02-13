@@ -1,9 +1,12 @@
 import type { Player } from "../../types/players";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../utils/env";
+import { SocketContext } from "../../context/socketProvider";
+import { useContext } from "react";
 
 export const useCreateRoom = () => {
   const navigate = useNavigate();
+  const { socket } = useContext(SocketContext);
 
   const createRoom = async ({
     username,
@@ -35,6 +38,7 @@ export const useCreateRoom = () => {
             isHost: data.room.hostId === data.player.id,
           }),
         );
+        socket?.emit("room:join-socket", data.room.id);
         navigate(`/lobby/${data.room.id}`);
       }
     } catch (err) {

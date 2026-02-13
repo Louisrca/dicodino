@@ -15,6 +15,7 @@ const SpinButton = ({
   isAnimating,
   disabled,
   handleAction,
+  type,
 }: {
   title?: string;
   href?: string;
@@ -23,6 +24,7 @@ const SpinButton = ({
   isAnimating?: boolean;
   disabled?: boolean;
   handleAction?: () => void;
+  type?: "button" | "submit" | "reset";
 }) => {
   const container = useRef(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -67,6 +69,7 @@ const SpinButton = ({
           disabled && style.disabled,
         )}
         disabled={disabled}
+        type={type || "button"}
       >
         {title || "Spin Me!"}
       </button>
