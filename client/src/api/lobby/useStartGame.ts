@@ -1,40 +1,23 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import type { Socket } from "socket.io-client";
+import { API_BASE_URL } from "../../utils/env";
 
-interface GameStartData {
-  message: string;
-  roomId?: string;
-}
+export const useGameStart = () => {
+  const startGame = async (lobbyId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/lobby/${lobbyId}/start`, {
+        method: "POST",
+        
+      });
 
-export const useGameStart = (socket: Socket | null, roomId: string | null) => {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!socket || !roomId) return;
-
-    const handleGameStart = (data: GameStartData) => {
-      console.log("Game started:", data.message);
-      
-      const playerData = localStorage.getItem("player");
-      if (playerData) {
-        const player = JSON.parse(playerData);
-        localStorage.setItem(
-          "player",
-          JSON.stringify({
-            ...player,
-            gameStarted: true,
-          })
-        );
+      if (!response.ok) {
+        throw new Error("Failed to start game");
       }
 
-      navigate(`/room/${roomId}`);
-    };
+      const data = await response.json();
+      console.log("Game started successfully:", data);
+    } catch (error) {
+      console.error("Error starting game:", error);
+    }
+  };
 
-    socket.on("room:gameStarted", handleGameStart);
-
-    return () => {
-      socket.off("room:gameStarted", handleGameStart);
-    };
-  }, [socket, roomId, navigate]);
+  return { startGame };
 };

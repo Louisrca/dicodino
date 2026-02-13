@@ -37,8 +37,10 @@ export const postMessage = async (
       where: { roomId: id, roundStarted: true },
     });
 
-    const isCorrect = await wordsMatch(message, currentRound?.currentDefinition || "");
-
+    const isCorrect = await wordsMatch(
+      message,
+      currentRound?.currentDefinition || "",
+    );
 
     console.log("🚀 ~ postMessage ~ isCorrect:", isCorrect);
 
