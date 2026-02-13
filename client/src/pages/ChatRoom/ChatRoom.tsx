@@ -27,10 +27,7 @@ const ChatRoom = () => {
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentDefinition, setCurrentDefinition] = useState(
-    () =>
-      definitionFromNav ||
-      localStorage.getItem("currentDefinition") ||
-      "",
+    () => definitionFromNav || localStorage.getItem("currentDefinition") || "",
   );
 
   useEffect(() => {
@@ -75,7 +72,7 @@ const ChatRoom = () => {
         const next = r + 1;
         if (next > MAX_ROUNDS) {
           alert("Partie terminée ! 5 rounds gagnés.");
-          navigate("/");
+          navigate(`/score/${roomId}`);
         }
         return next;
       });

@@ -28,8 +28,6 @@ export const io = new Server(server, {
 });
 
 io.on("connection", (socket) => {
-  console.log(`New connection: ${socket.id}`);
-
   // user:isConnected (reconnexion d'un client)
   socket.on(
     "user:isConnected",
@@ -38,9 +36,6 @@ io.on("connection", (socket) => {
         where: { id: roomId },
         include: { players: { where: { connected: true } } },
       });
-      console.log(
-        `User isConnected - username: "${username}", roomId: "${roomId}", socketId: ${socketId}`,
-      );
 
       if (!isRoomExist) {
         console.log(`❌ Room not found: ${roomId}`);

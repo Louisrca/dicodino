@@ -7,6 +7,7 @@ import CreateRoom from "./pages/CreateRoom/CreateRoom";
 import Home from "./pages/Home/Home";
 import JoinRoom from "./pages/JoinRoom/JoinRoom";
 import Lobby from "./pages/Lobby/Lobby";
+import Scoring from "./pages/Scoring/Scoring";
 function App() {
   return (
     <div className="App">
@@ -18,6 +19,7 @@ function App() {
             <Route path="/createRoom" element={<CreateRoom />} />
             <Route path="/joinRoom" element={<JoinRoom />} />
             <Route path="/lobby/:lobbyId" element={<Lobby />} />
+            <Route path="/score/:roomId" element={<Scoring />} />
             <Route path="/" element={<Home />} />
           </Routes>
         </div>

@@ -39,6 +39,17 @@ export const createRoom = async (req: Request, res: Response) => {
       data: { id: roomId, category: c, hostId: player.id },
     });
 
+    const isUserAlreadyInRoom = await prisma.player.findFirst({
+      where: { username: u, roomId: roomId, connected: true },
+    });
+
+    if (isUserAlreadyInRoom) {
+      return res.status(400).json({
+        ok: false,
+        error: "Username already in use in this room. Please choose another.",
+      });
+    }
+
     if (!room) {
       console.log(`Failed to create room for ${u}`);
       return res

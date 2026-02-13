@@ -1,3 +1,5 @@
+import styles from "./TextArea.module.css";
+
 const TextArea = ({
   setMessage,
 }: {
@@ -10,6 +12,7 @@ const TextArea = ({
         rows={4}
         cols={50}
         onChange={(e) => setMessage(e.target.value)}
+        className={styles.textArea}
       />
     </div>
   );
