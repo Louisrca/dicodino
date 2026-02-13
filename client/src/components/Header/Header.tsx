@@ -21,7 +21,7 @@ const Header = () => {
         {socketId ? (
           <>
             <TreePalmSVG
-              style={{ width: "24px", height: "24px", fill: "#4caf50" }}
+              style={{ width: "24px", height: "24px", fill: "#8eff48" }}
             />
             {"Connecté"}
           </>

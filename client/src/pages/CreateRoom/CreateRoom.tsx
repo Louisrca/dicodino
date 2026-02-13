@@ -3,9 +3,11 @@ import { SocketContext } from "../../context/socketProvider";
 import { useCreateRoom } from "../../api/createRoom/useCreateRoom";
 import SpinButton from "../../components/SpinButton/SpinButton";
 import styles from "./CreateRoom.module.css";
+import CategoryChoice from "../../components/categoryChoice/CategoryChoice";
 
 const CreateRoom = () => {
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState("dino");
+  console.log("🚀 ~ CreateRoom ~ category:", category);
   const [username, setUsername] = useState("");
   const [error, setError] = useState<Error | null>(null);
 
@@ -51,17 +53,24 @@ const CreateRoom = () => {
             onChange={(e) => setUsername(e.target.value)}
           />
 
-          <input
-            className={styles.input}
-            placeholder="Catégorie"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+          <CategoryChoice
+            onCategorySelect={(cat) => setCategory(cat)}
+            categoryChoiced={category}
           />
           <div className={styles.buttonWrap}>
             <SpinButton
               title="Créer"
               variant="primary"
               handleAction={handleCreateRoom}
+              isSpinning={false}
+            />
+          </div>
+          <div className={styles.buttonWrap}>
+            <SpinButton
+              title="Retour à l'accueil"
+              variant="tertiary"
+              href="/"
+              isSpinning={false}
             />
           </div>
         </form>
