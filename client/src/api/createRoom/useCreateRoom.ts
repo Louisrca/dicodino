@@ -41,8 +41,14 @@ export const useCreateRoom = () => {
         socket?.emit("room:join-socket", data.room.id);
         navigate(`/lobby/${data.room.id}`);
       }
+
+      if (!data.ok) {
+        // ✅ Throw l'erreur pour que le catch la récupère
+        throw new Error(data.error || "Failed to create room");
+      }
     } catch (err) {
       console.error("Error creating room:", err);
+      throw new Error(err instanceof Error ? err.message : "Unknown error");
     }
   };
 

@@ -7,6 +7,7 @@ import styles from "./JoinRoom.module.css";
 const JoinRoom = () => {
   const [username, setUsername] = useState("");
   const [roomId, setRoomId] = useState("");
+  const [error, setError] = useState<Error | null>(null);
 
   const { joinRoom } = useJoinRoom();
 
@@ -22,7 +23,10 @@ const JoinRoom = () => {
   }, [socket]);
 
   const handleJoinRoom = () => {
-    joinRoom({ username, roomId });
+    joinRoom({ username, roomId }).catch((err) => {
+      console.error("Error joining room:", err);
+      setError(err);
+    });
   };
 
   return (
@@ -30,6 +34,13 @@ const JoinRoom = () => {
       <div className={styles.card}>
         <h1 className={styles.title}>Rejoindre une room</h1>
         <p className={styles.subtitle}>Entre ton pseudo et l’ID de la room</p>
+        {error && (
+          <div className={styles.error}>
+            <p>
+              Erreur lors de la tentative de rejoindre la room : {error.message}
+            </p>
+          </div>
+        )}
         <form className={styles.form}>
           <input
             className={styles.input}

@@ -15,7 +15,6 @@ export const useJoinRoom = () => {
     username: string;
     roomId: string;
   }) => {
-
     const roomIdLowercase = roomId.toLowerCase();
     try {
       const res = await fetch(`${API_BASE_URL}/room/join`, {
@@ -40,8 +39,13 @@ export const useJoinRoom = () => {
 
         navigate(`/lobby/${data.roomId}`);
       }
+
+      if (!data.ok) {
+        throw new Error(data.error || "Failed to join room");
+      }
     } catch (err) {
       console.error("Error joining room:", err);
+      throw new Error(err instanceof Error ? err.message : "Unknown error");
     }
   };
 

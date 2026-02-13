@@ -7,6 +7,7 @@ import styles from "./CreateRoom.module.css";
 const CreateRoom = () => {
   const [category, setCategory] = useState("");
   const [username, setUsername] = useState("");
+  const [error, setError] = useState<Error | null>(null);
 
   const { createRoom } = useCreateRoom();
 
@@ -25,7 +26,11 @@ const CreateRoom = () => {
   }, [socket]);
 
   const handleCreateRoom = () => {
-    createRoom({ username, category });
+    createRoom({ username, category }).catch((err) => {
+      console.error("Error creating room:", err);
+
+      setError(err);
+    });
   };
 
   return (
@@ -33,6 +38,11 @@ const CreateRoom = () => {
       <div className={styles.card}>
         <h1 className={styles.title}>Créer une room</h1>
         <p className={styles.subtitle}>Choisis une catégorie et ton pseudo</p>
+        {error && (
+          <div className={styles.error}>
+            <p>Erreur lors de la création de la room : {error.message}</p>
+          </div>
+        )}
         <form className={styles.form}>
           <input
             className={styles.input}
