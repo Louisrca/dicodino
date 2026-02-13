@@ -16,7 +16,7 @@ const SpinButton = ({
   disabled,
   handleAction,
   type,
-  isSpinning = true,
+  isSpinning = false,
 }: {
   title?: string;
   href?: string;
