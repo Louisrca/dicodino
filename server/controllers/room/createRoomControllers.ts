@@ -37,7 +37,7 @@ export const createRoom = async (req: Request, res: Response) => {
     });
 
     const isUserAlreadyInRoom = await prisma.player.findFirst({
-      where: { username: u, roomId: roomId, connected: true },
+      where: { username: player.username, roomId: roomId, connected: true },
     });
 
     if (isUserAlreadyInRoom) {

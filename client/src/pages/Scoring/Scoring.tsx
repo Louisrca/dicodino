@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useRoundResults } from "../../api/roundResults/useRoundResults";
 import { useEffect, useState } from "react";
+import styles from "./Scoring.module.css";
 
 type PlayerScore = {
   id: string;
@@ -22,15 +23,10 @@ const Scoring = () => {
   const { roundResults } = useRoundResults();
 
   const [playerScores, setPlayerScores] = useState<PlayerScore[]>([]);
-  console.log("🚀 ~ Scoring ~ playerScores:", playerScores);
   const [scoreResults, setScoreResults] = useState<RoundScore[]>([]);
-  console.log("🚀 ~ Scoring ~ scoreResults:", scoreResults);
 
   useEffect(() => {
-    if (!roomId) {
-      console.error("No room ID found in localStorage");
-      return;
-    }
+    if (!roomId) return;
 
     roundResults(roomId)
       .then((data) => {
@@ -43,44 +39,73 @@ const Scoring = () => {
   }, [roomId]);
 
   const winner =
-    playerScores && playerScores.length > 0
+    playerScores.length > 0
       ? playerScores.reduce((prev, current) =>
           current.finalScore > prev.finalScore ? current : prev,
         )
       : null;
 
   if (playerScores.length === 0) {
-    return <div>Loading...</div>;
+    return (
+      <div className={styles.page}>
+        <div className={styles.loading}>Chargement du score…</div>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h1>Scoring</h1>
-      <h2>Winner: {winner?.username}</h2>
-      <p>Voici le scoring de la partie</p>
-      {playerScores.map((playerScore) => (
-        <div key={playerScore.username}>
-          <h2>{playerScore.username}</h2>
-          <p>
-            {" "}
-            Score: {playerScore.initialScore}{" "}
-            <span>
-              {playerScore.pointsWon > 0 ? `+${playerScore.pointsWon}` : 0}
-            </span>
-          </p>
-          Final score: {playerScore.finalScore}
-        </div>
-      ))}
+    <div className={styles.page}>
+      <div className={styles.card}>
+        <h1 className={styles.title}>Scoring</h1>
+        <p className={styles.subtitle}>Résultat de la partie</p>
 
-      <h2>Historique</h2>
-      {scoreResults.map((round) => (
-        <div key={round.roundNumber}>
-          <h3>Round {round.roundNumber}</h3>
-          <p>Definition: {round.definition}</p>
-          <p>Answer: {round.answer}</p>
-          <p>Winner: {round.playerUsername || "No winner"}</p>
-        </div>
-      ))}
+        {winner && (
+          <p className={styles.winner}>🏆 Gagnant : {winner.username}</p>
+        )}
+
+        <hr className={styles.divider} />
+
+        <h2 className={styles.sectionTitle}>Scores</h2>
+        <ul className={styles.playerList}>
+          {playerScores.map((playerScore) => (
+            <li key={playerScore.id} className={styles.playerItem}>
+              <span className={styles.playerName}>{playerScore.username}</span>
+              <span className={styles.playerScore}>
+                {playerScore.initialScore}
+                {playerScore.pointsWon > 0 && (
+                  <span className={styles.pointsWon}>
+                    {" "}
+                    +{playerScore.pointsWon}
+                  </span>
+                )}{" "}
+                → {playerScore.finalScore}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        <hr className={styles.divider} />
+
+        <h2 className={styles.sectionTitle}>Historique</h2>
+        <ul className={styles.historyList}>
+          {scoreResults.map((round) => (
+            <li key={round.roundNumber} className={styles.historyItem}>
+              <div className={styles.historyRound}>
+                Round {round.roundNumber}
+              </div>
+              <div className={styles.historyMeta}>
+                {round.definition}
+              </div>
+              <div className={styles.historyMeta}>
+                Réponse : {round.answer}
+              </div>
+              <div className={styles.historyMeta}>
+                Gagnant : {round.playerUsername ?? "—"}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

@@ -1,0 +1,124 @@
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.card {
+  background-color: rgba(255, 252, 225, 0.06);
+  border: 1px solid rgba(255, 252, 225, 0.2);
+  padding: 32px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fffce1;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  font-size: 0.9rem;
+  color: rgba(255, 252, 225, 0.7);
+}
+
+.winner {
+  margin: 0 0 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #8eff48;
+}
+
+.divider {
+  border: none;
+  height: 1px;
+  background-color: rgba(255, 252, 225, 0.2);
+  margin: 0 0 20px;
+}
+
+.sectionTitle {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fffce1;
+}
+
+.playerList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+
+.playerItem {
+  font-size: 0.85rem;
+  color: #fffce1;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 252, 225, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.playerItem:last-child {
+  border-bottom: none;
+}
+
+.playerName {
+  font-weight: 500;
+}
+
+.playerScore {
+  color: rgba(255, 252, 225, 0.8);
+  font-size: 0.8rem;
+}
+
+.pointsWon {
+  color: #8eff48;
+  font-size: 0.8rem;
+}
+
+.historyList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.historyItem {
+  font-size: 0.8rem;
+  color: rgba(255, 252, 225, 0.85);
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 252, 225, 0.1);
+}
+
+.historyItem:last-child {
+  border-bottom: none;
+}
+
+.historyRound {
+  font-weight: 600;
+  color: #fffce1;
+  margin-bottom: 4px;
+}
+
+.historyMeta {
+  color: rgba(255, 252, 225, 0.6);
+  font-size: 0.75rem;
+  margin: 2px 0;
+}
+
+.loading {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: rgba(255, 252, 225, 0.7);
+}
