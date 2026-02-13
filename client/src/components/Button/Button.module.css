@@ -1,0 +1,14 @@
+.button {
+  border: none;
+  outline: 1px solid #fffce1;
+  outline-offset: 2px;
+  background-color: transparent;
+  color: #fffce1;
+  cursor: pointer;
+  height: 32px;
+}
+
+.button.selected {
+  background-color: #fffce1;
+  color: #0e100f;
+}

@@ -16,6 +16,7 @@ const SpinButton = ({
   disabled,
   handleAction,
   type,
+  isSpinning = true,
 }: {
   title?: string;
   href?: string;
@@ -25,6 +26,7 @@ const SpinButton = ({
   disabled?: boolean;
   handleAction?: () => void;
   type?: "button" | "submit" | "reset";
+  isSpinning?: boolean;
 }) => {
   const container = useRef(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -49,7 +51,7 @@ const SpinButton = ({
 
     setIsAnimating?.(true);
 
-    rotate();
+    isSpinning && rotate();
     handleAction?.();
     if (href) {
       setTimeout(() => {
@@ -59,7 +61,7 @@ const SpinButton = ({
     }
   };
   return (
-    <div ref={container}>
+    <div ref={container} className={style.container}>
       <button
         ref={buttonRef}
         onClick={handleClick}

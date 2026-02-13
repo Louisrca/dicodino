@@ -56,3 +56,7 @@
 .buttonWrap {
   margin-top: 8px;
 }
+
+.error {
+  color: #df2413e7;
+}

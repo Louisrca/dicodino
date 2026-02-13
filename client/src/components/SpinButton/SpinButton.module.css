@@ -1,3 +1,7 @@
+.container {
+  width: 100%;
+}
+
 .button {
   border: none;
   outline: 1px solid #fffce1;
@@ -6,6 +10,7 @@
   color: #fffce1;
   cursor: pointer;
   height: 32px;
+  width: 100%;
 }
 
 .button.primary {
@@ -21,7 +26,6 @@
 .button.tertiary {
   background-color: transparent;
   color: #fffce1;
-  border: 1px solid #fffce1;
 }
 
 .button.disabled {

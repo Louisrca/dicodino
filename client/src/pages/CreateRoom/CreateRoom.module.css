@@ -55,4 +55,12 @@
 
 .buttonWrap {
   margin-top: 8px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.error {
+  color: #df2413e7;
 }
